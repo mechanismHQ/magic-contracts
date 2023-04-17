@@ -31,7 +31,7 @@ export type Bytes = Uint8Array;
 const def = <T>(value: T | undefined, def: T) =>
   value === undefined ? def : value;
 const isBytes = P.isBytes;
-const hash160 = (msg: Bytes) => ripemd160(sha256(msg));
+export const hash160 = (msg: Bytes) => ripemd160(sha256(msg));
 const sha256x2 = (...msgs: Bytes[]) => sha256(sha256(concat(...msgs)));
 const concat = P.concatBytes;
 // Make base58check work

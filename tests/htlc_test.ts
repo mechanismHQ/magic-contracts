@@ -34,8 +34,8 @@ const fixture = {
 Deno.test({
   name: "encode expiration",
   fn() {
-    const exp = 100n;
-    const buff = encodeExpiration(exp);
+    // const exp = 100n;
+    // const buff = encodeExpiration(exp);
     // console.log(bytesToHex(buff));
 
     const swapperBytes = encodeSwapperId(1n);
@@ -88,7 +88,7 @@ Deno.test({
     const htlc = {
       expiration: BigInt(fixture.expiration),
       hash: hash,
-      metadata,
+      metadata: sha256(metadata),
       recipientPublicKey: pub,
       senderPublicKey: hexToBytes(fixture.sender),
     };
@@ -117,7 +117,7 @@ Deno.test({
       amount: 900n,
     });
 
-    // console.log(hex.encode(htlcScript));
+    console.log(hex.encode(htlcScript));
 
     // console.log(hex.encode(hash160(htlcScript)));
 

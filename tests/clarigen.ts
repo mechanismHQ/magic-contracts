@@ -8,5 +8,10 @@ import { simnet } from "./clarigen-types.ts";
 export const { test, contracts, accounts } = factory(simnet);
 
 export const {
-  
+  clarityBitcoin,
+  clarityBitcoinV2,
+  ftTrait,
+  magic,
+  restrictedTokenTrait,
+  wrappedBitcoin
 } = contracts;

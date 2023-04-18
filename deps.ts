@@ -8,7 +8,6 @@ export {
   factory,
   valueToCV,
 } from "https://deno.land/x/clarigen@v0.5.4/mod.ts";
-export { bytesToHex, hexToBytes } from "./vendor/noble-hashes/utils.ts";
 export type {
   FullContract,
   ContractCallTyped,
@@ -33,3 +32,12 @@ export {
 } from "https://deno.land/std@0.90.0/testing/asserts.ts";
 export { crypto } from "https://deno.land/std@0.162.0/crypto/mod.ts";
 export * as btc from "./vendor/scure-btc-signer.ts";
+export { hex } from "./vendor/scure-base.ts";
+export { hash160 } from "./vendor/scure-btc-signer.ts";
+export { secp256k1 } from "./vendor/noble-curves/secp256k1.ts";
+export {
+  bytesToHex,
+  hexToBytes,
+  randomBytes,
+} from "./vendor/noble-hashes/utils.ts";
+export { sha256 } from "./vendor/noble-hashes/sha256.ts";

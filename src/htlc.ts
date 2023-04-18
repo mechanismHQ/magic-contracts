@@ -147,3 +147,36 @@ export function generateLegacyHtlcTx(htlc: LegacyHTLC) {
   tx.signIdx(privKey, 0);
   return tx;
 }
+
+export function generateHtlcTx(htlc: HTLC) {
+  const htlcScript = createHtlcScript(htlc);
+  const privKey = hex.decode(
+    "0101010101010101010101010101010101010101010101010101010101010101"
+  );
+  const opts = { version: 1, allowLegacyWitnessUtxo: true };
+  const tx = new btc.Transaction(opts);
+  const pub = secp256k1.getPublicKey(privKey, true);
+  tx.addInput({
+    txid: hex.decode(
+      "c061c23190ed3370ad5206769651eaf6fac6d87d85b5db34e30a74e0c4a6da3e"
+    ),
+    index: 0,
+    witnessUtxo: {
+      amount: 10100n,
+      script: btc.p2pkh(pub).script,
+    },
+  });
+  const out = btc.OutScript.encode({
+    type: "sh",
+    hash: hash160(htlcScript),
+  });
+
+  tx.addOutput({
+    redeemScript: htlcScript,
+    script: out,
+    amount: 10000n,
+  });
+
+  tx.signIdx(privKey, 0);
+  return tx;
+}

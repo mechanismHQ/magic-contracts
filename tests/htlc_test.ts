@@ -1,10 +1,22 @@
-import { btc, assertEquals, bytesToHex, hexToBytes } from "../deps.ts";
 import {
+  btc,
+  assertEquals,
+  bytesToHex,
+  hexToBytes,
+  hex,
+  secp256k1,
+  sha256,
+  hash160,
+} from "../deps.ts";
+import {
+  createHtlcScript,
   createLegacyHtlcScript,
   encodeExpiration,
   encodeSwapperId,
+  generateHtlcTx,
   generateLegacyHtlcTx,
 } from "../src/htlc.ts";
+import { randomBytes } from "../vendor/noble-hashes/utils.ts";
 
 const fixture = {
   script:
@@ -24,10 +36,10 @@ Deno.test({
   fn() {
     const exp = 100n;
     const buff = encodeExpiration(exp);
-    console.log(bytesToHex(buff));
+    // console.log(bytesToHex(buff));
 
     const swapperBytes = encodeSwapperId(1n);
-    console.log(bytesToHex(swapperBytes));
+    // console.log(bytesToHex(swapperBytes));
     assertEquals(bytesToHex(swapperBytes), fixture.swapperHex);
   },
 });
@@ -42,10 +54,10 @@ Deno.test("createLegacyHtlcScript", () => {
   };
   const script = createLegacyHtlcScript(htlc);
 
-  const decoded = btc.Script.decode(hexToBytes(fixture.script));
-  console.log(decoded);
+  // const decoded = btc.Script.decode(hexToBytes(fixture.script));
+  // console.log(decoded);
 
-  console.log(btc.Script.decode(script));
+  // console.log(btc.Script.decode(script));
   assertEquals(bytesToHex(script), fixture.script);
 });
 
@@ -60,5 +72,65 @@ Deno.test("create htlc tx", () => {
 
   const tx = generateLegacyHtlcTx(htlc);
 
-  console.log(tx.hex);
+  // console.log(tx.hex);
+});
+
+Deno.test({
+  name: "sign htlc tx",
+  fn() {
+    const privKey = hex.decode(
+      "0101010101010101010101010101010101010101010101010101010101010101"
+    );
+    const pub = secp256k1.getPublicKey(privKey, true);
+    const preimage = randomBytes(20);
+    const hash = sha256(preimage);
+    const metadata = hex.decode("0000");
+    const htlc = {
+      expiration: BigInt(fixture.expiration),
+      hash: hash,
+      metadata,
+      recipientPublicKey: pub,
+      senderPublicKey: hexToBytes(fixture.sender),
+    };
+
+    const htlcScript = createHtlcScript(htlc);
+    const inputTx = generateHtlcTx(htlc);
+    inputTx.finalize();
+
+    const psbt = new btc.Transaction({ version: 1, allowUnknowInput: true });
+
+    psbt.addInput({
+      txid: inputTx.hash,
+      nonWitnessUtxo: inputTx.hex,
+      index: 0,
+      redeemScript: htlcScript,
+    });
+
+    const out = btc.OutScript.encode({
+      type: "sh",
+      hash: hash160(htlcScript),
+    });
+
+    psbt.addOutput({
+      redeemScript: htlcScript,
+      script: out,
+      amount: 900n,
+    });
+
+    // console.log(hex.encode(htlcScript));
+
+    // console.log(hex.encode(hash160(htlcScript)));
+
+    // psbt.finalizeIdx(0);
+
+    psbt.signIdx(privKey, 0);
+    // console.log(hex.encode(pub));
+
+    const input = psbt.getInput(0)!;
+    const partial = input.partialSig!;
+    const finalized = btc.Script.encode([partial[0][1], "OP_0"]);
+    input.finalScriptSig = finalized;
+    // console.log(partial[0].map(hex.encode)[1]);
+    psbt.finalize();
+  },
 });

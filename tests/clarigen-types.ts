@@ -3195,6 +3195,105 @@ export const contracts = {
           "senderPublicKey": Uint8Array;
         }, bigint>
       >,
+      escrowSwapV2: {
+        "name": "escrow-swap-v2",
+        "access": "public",
+        "args": [
+          {
+            "name": "block",
+            "type": {
+              "tuple": [{
+                "name": "header",
+                "type": { "buffer": { "length": 80 } },
+              }, { "name": "height", "type": "uint128" }],
+            },
+          },
+          {
+            "name": "prev-blocks",
+            "type": {
+              "list": { "type": { "buffer": { "length": 80 } }, "length": 10 },
+            },
+          },
+          { "name": "tx", "type": { "buffer": { "length": 1024 } } },
+          {
+            "name": "proof",
+            "type": {
+              "tuple": [
+                {
+                  "name": "hashes",
+                  "type": {
+                    "list": {
+                      "type": { "buffer": { "length": 32 } },
+                      "length": 12,
+                    },
+                  },
+                },
+                { "name": "tree-depth", "type": "uint128" },
+                { "name": "tx-index", "type": "uint128" },
+              ],
+            },
+          },
+          { "name": "output-index", "type": "uint128" },
+          { "name": "sender", "type": { "buffer": { "length": 33 } } },
+          { "name": "recipient", "type": { "buffer": { "length": 33 } } },
+          { "name": "expiration-buff", "type": { "buffer": { "length": 4 } } },
+          { "name": "hash", "type": { "buffer": { "length": 32 } } },
+          { "name": "swapper", "type": "principal" },
+          { "name": "supplier-id", "type": "uint128" },
+          { "name": "min-to-receive", "type": "uint128" },
+        ],
+        "outputs": {
+          "type": {
+            "response": {
+              "ok": {
+                "tuple": [
+                  { "name": "csv", "type": "uint128" },
+                  { "name": "output-index", "type": "uint128" },
+                  {
+                    "name": "redeem-script",
+                    "type": { "buffer": { "length": 148 } },
+                  },
+                  { "name": "sats", "type": "uint128" },
+                  {
+                    "name": "sender-public-key",
+                    "type": { "buffer": { "length": 33 } },
+                  },
+                ],
+              },
+              "error": "uint128",
+            },
+          },
+        },
+      } as TypedAbiFunction<
+        [
+          block: TypedAbiArg<{
+            "header": Uint8Array;
+            "height": number | bigint;
+          }, "block">,
+          prevBlocks: TypedAbiArg<Uint8Array[], "prevBlocks">,
+          tx: TypedAbiArg<Uint8Array, "tx">,
+          proof: TypedAbiArg<{
+            "hashes": Uint8Array[];
+            "treeDepth": number | bigint;
+            "txIndex": number | bigint;
+          }, "proof">,
+          outputIndex: TypedAbiArg<number | bigint, "outputIndex">,
+          sender: TypedAbiArg<Uint8Array, "sender">,
+          recipient: TypedAbiArg<Uint8Array, "recipient">,
+          expirationBuff: TypedAbiArg<Uint8Array, "expirationBuff">,
+          hash: TypedAbiArg<Uint8Array, "hash">,
+          swapper: TypedAbiArg<string, "swapper">,
+          supplierId: TypedAbiArg<number | bigint, "supplierId">,
+          minToReceive: TypedAbiArg<number | bigint, "minToReceive">,
+        ],
+        Response<{
+          "csv": bigint;
+          "outputIndex": bigint;
+          "redeemScript": Uint8Array;
+          "sats": bigint;
+          "senderPublicKey": Uint8Array;
+        }, bigint>
+      >,
       finalizeOutboundSwap: {
         "name": "finalize-outbound-swap",
         "access": "public",
@@ -3287,6 +3386,42 @@ export const contracts = {
           "hash": Uint8Array;
           "supplier": bigint;
           "swapper": bigint;
+          "xbtc": bigint;
+        }, bigint>
+      >,
+      finalizeSwapV2: {
+        "name": "finalize-swap-v2",
+        "access": "public",
+        "args": [{ "name": "txid", "type": { "buffer": { "length": 32 } } }, {
+          "name": "preimage",
+          "type": { "buffer": { "length": 128 } },
+        }],
+        "outputs": {
+          "type": {
+            "response": {
+              "ok": {
+                "tuple": [
+                  { "name": "expiration", "type": "uint128" },
+                  { "name": "hash", "type": { "buffer": { "length": 32 } } },
+                  { "name": "supplier", "type": "uint128" },
+                  { "name": "swapper", "type": "principal" },
+                  { "name": "xbtc", "type": "uint128" },
+                ],
+              },
+              "error": "uint128",
+            },
+          },
+        },
+      } as TypedAbiFunction<
+        [
+          txid: TypedAbiArg<Uint8Array, "txid">,
+          preimage: TypedAbiArg<Uint8Array, "preimage">,
+        ],
+        Response<{
+          "expiration": bigint;
+          "hash": Uint8Array;
+          "supplier": bigint;
+          "swapper": string;
           "xbtc": bigint;
         }, bigint>
       >,
@@ -3573,6 +3708,27 @@ export const contracts = {
         ],
         Uint8Array
       >,
+      generateHtlcScriptV2: {
+        "name": "generate-htlc-script-v2",
+        "access": "read_only",
+        "args": [
+          { "name": "sender", "type": { "buffer": { "length": 33 } } },
+          { "name": "recipient", "type": { "buffer": { "length": 33 } } },
+          { "name": "expiration", "type": { "buffer": { "length": 4 } } },
+          { "name": "hash", "type": { "buffer": { "length": 32 } } },
+          { "name": "metadata", "type": { "buffer": { "length": 32 } } },
+        ],
+        "outputs": { "type": { "buffer": { "length": 148 } } },
+      } as TypedAbiFunction<
+        [
+          sender: TypedAbiArg<Uint8Array, "sender">,
+          recipient: TypedAbiArg<Uint8Array, "recipient">,
+          expiration: TypedAbiArg<Uint8Array, "expiration">,
+          hash: TypedAbiArg<Uint8Array, "hash">,
+          metadata: TypedAbiArg<Uint8Array, "metadata">,
+        ],
+        Uint8Array
+      >,
       generateOutput: {
         "name": "generate-output",
         "access": "read_only",
@@ -3609,7 +3765,7 @@ export const contracts = {
       generateScriptHash: {
         "name": "generate-script-hash",
         "access": "read_only",
-        "args": [{ "name": "script", "type": { "buffer": { "length": 120 } } }],
+        "args": [{ "name": "script", "type": { "buffer": { "length": 148 } } }],
         "outputs": { "type": { "buffer": { "length": 23 } } },
       } as TypedAbiFunction<
         [script: TypedAbiArg<Uint8Array, "script">],
@@ -3672,7 +3828,7 @@ export const contracts = {
                   { "name": "output-index", "type": "uint128" },
                   {
                     "name": "redeem-script",
-                    "type": { "buffer": { "length": 120 } },
+                    "type": { "buffer": { "length": 148 } },
                   },
                   { "name": "sats", "type": "uint128" },
                   {
@@ -3762,7 +3918,7 @@ export const contracts = {
                 { "name": "output-index", "type": "uint128" },
                 {
                   "name": "redeem-script",
-                  "type": { "buffer": { "length": 120 } },
+                  "type": { "buffer": { "length": 148 } },
                 },
                 { "name": "sats", "type": "uint128" },
                 {
@@ -4178,7 +4334,7 @@ export const contracts = {
             { "name": "output-index", "type": "uint128" },
             {
               "name": "redeem-script",
-              "type": { "buffer": { "length": 120 } },
+              "type": { "buffer": { "length": 148 } },
             },
             { "name": "sats", "type": "uint128" },
             {
@@ -4216,6 +4372,25 @@ export const contracts = {
         "hash": Uint8Array;
         "supplier": bigint;
         "swapper": bigint;
+        "xbtc": bigint;
+      }>,
+      inboundSwapsV2: {
+        "name": "inbound-swaps-v2",
+        "key": { "buffer": { "length": 32 } },
+        "value": {
+          "tuple": [
+            { "name": "expiration", "type": "uint128" },
+            { "name": "hash", "type": { "buffer": { "length": 32 } } },
+            { "name": "supplier", "type": "uint128" },
+            { "name": "swapper", "type": "principal" },
+            { "name": "xbtc", "type": "uint128" },
+          ],
+        },
+      } as TypedAbiMap<Uint8Array, {
+        "expiration": bigint;
+        "hash": Uint8Array;
+        "supplier": bigint;
+        "swapper": string;
         "xbtc": bigint;
       }>,
       outboundSwaps: {

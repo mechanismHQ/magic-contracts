@@ -27,13 +27,21 @@
   expiration: uint,
   hash: (buff 32),
 })
+(define-map inbound-swaps-v2 (buff 32) {
+  swapper: principal,
+  xbtc: uint,
+  supplier: uint,
+  expiration: uint,
+  hash: (buff 32),
+})
+
 ;; extra info for inbound swaps - not needed for the `finalize` step
 (define-map inbound-meta (buff 32) {
   sender-public-key: (buff 33),
   output-index: uint,
   csv: uint,
   sats: uint,
-  redeem-script: (buff 120),
+  redeem-script: (buff 148),
 })
 ;; mapping of txid -> preimage
 (define-map inbound-preimages (buff 32) (buff 128))
@@ -360,6 +368,102 @@
   )
 )
 
+;; Escrow funds for a supplier after sending BTC during an inbound swap.
+;; Validates that the BTC tx is valid by re-constructing the HTLC script
+;; and comparing it to the BTC tx.
+;; Validates that the HTLC data (like expiration) is valid.
+;; 
+;; `tx-sender` must be equal to the swapper embedded in the HTLC. This ensures
+;; that the `min-to-receive` parameter is provided by the end-user.
+;;
+;; @returns metadata regarding this inbound swap (see `inbound-meta` map)
+;;
+;; @param block; a tuple containing `header` (the Bitcoin block header) and the `height` (Stacks height)
+;; where the BTC tx was confirmed.
+;; @param prev-blocks; because Clarity contracts can't get Bitcoin headers when there is no Stacks block,
+;; this param allows users to specify the chain of block headers going back to the block where the
+;; BTC tx was confirmed.
+;; @param tx; the hex data of the BTC tx
+;; @param proof; a merkle proof to validate inclusion of this tx in the BTC block
+;; @param output-index; the index of the HTLC output in the BTC tx
+;; @param sender; The swapper's public key used in the HTLC
+;; @param recipient; The supplier's public key used in the HTLC
+;; @param expiration-buff; A 4-byte integer the indicated the expiration of the HTLC
+;; @param hash; a hash of the `preimage` used in this swap
+;; @param swapper-buff; a 4-byte integer that indicates the `swapper-id`
+;; @param supplier-id; the supplier used in this swap
+;; @param min-to-receive; minimum receivable calculated off-chain to avoid the supplier front-run the swap by adjusting fees
+(define-public (escrow-swap-v2
+    (block { header: (buff 80), height: uint })
+    (prev-blocks (list 10 (buff 80)))
+    (tx (buff 1024))
+    (proof { tx-index: uint, hashes: (list 12 (buff 32)), tree-depth: uint })
+    (output-index uint)
+    (sender (buff 33))
+    (recipient (buff 33))
+    (expiration-buff (buff 4))
+    (hash (buff 32))
+    (swapper principal)
+    (supplier-id uint)
+    (min-to-receive uint)
+  )
+  (let
+    (
+      (was-mined-bool (unwrap! (contract-call? .clarity-bitcoin was-tx-mined-prev? block prev-blocks tx proof) ERR_TX_NOT_MINED))
+      (was-mined (asserts! was-mined-bool ERR_TX_NOT_MINED))
+      (mined-height (get height block))
+      (metadata (hash-metadata swapper min-to-receive))
+      (htlc-redeem (generate-htlc-script-v2 sender recipient expiration-buff hash metadata))
+      (htlc-output (generate-script-hash htlc-redeem))
+      (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
+      (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
+      (output-script (get scriptPubKey output))
+      (supplier (unwrap! (map-get? supplier-by-id supplier-id) ERR_INVALID_SUPPLIER))
+      (sats (get value output))
+      (fee-rate (unwrap! (get inbound-fee supplier) ERR_INVALID_SUPPLIER))
+      (xbtc (try! (get-swap-amount sats fee-rate (get inbound-base-fee supplier))))
+      (funds (get-funds supplier-id))
+      (funds-ok (asserts! (>= funds xbtc) ERR_INSUFFICIENT_FUNDS))
+      (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
+      (new-funds (- funds xbtc))
+      (new-escrow (+ escrowed xbtc))
+      (expiration (try! (read-varint expiration-buff)))
+      ;; (swapper-id (try! (read-uint32 swapper-buff u4)))
+      (txid (contract-call? .clarity-bitcoin get-txid tx))
+      (expiration-ok (try! (validate-expiration expiration mined-height)))
+      (escrow {
+        swapper: swapper,
+        supplier: supplier-id,
+        xbtc: xbtc,
+        expiration: (+ mined-height (- expiration ESCROW_EXPIRATION)),
+        hash: hash,
+      })
+      (meta {
+        sender-public-key: sender,
+        output-index: output-index,
+        csv: expiration,
+        redeem-script: htlc-redeem,
+        sats: sats,
+      })
+    )
+    ;; assert tx-sender is swapper
+    ;; (asserts! (is-eq tx-sender (unwrap! (map-get? swapper-by-id swapper-id) ERR_SWAPPER_NOT_FOUND)) ERR_UNAUTHORIZED)
+    (asserts! (is-eq (get public-key supplier) recipient) ERR_INVALID_OUTPUT)
+    (asserts! (is-eq output-script htlc-output) ERR_INVALID_OUTPUT)
+    (asserts! (is-eq (len hash) u32) ERR_INVALID_HASH)
+    (asserts! (map-insert inbound-swaps-v2 txid escrow) ERR_TXID_USED)
+    (asserts! (map-insert inbound-meta txid meta) ERR_PANIC)
+    (asserts! (>= xbtc min-to-receive) ERR_INCONSISTENT_FEES)
+    (map-set supplier-funds supplier-id new-funds)
+    (map-set supplier-escrow supplier-id new-escrow)
+    (print (merge (merge escrow meta) { 
+      topic: "escrow",
+      txid: txid,
+    }))
+    (ok meta)
+  )
+)
+
 ;; Finalize an inbound swap by revealing the preimage.
 ;; Validates that `sha256(preimage)` is equal to the `hash` provided when
 ;; escrowing the swap.
@@ -380,6 +484,42 @@
         (xbtc (get xbtc swap))
         (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
         (swapper (unwrap! (get-swapper-principal (get swapper swap)) ERR_PANIC))
+      )
+      (map-insert inbound-preimages txid preimage)
+      (try! (as-contract (transfer xbtc tx-sender swapper)))
+      (asserts! (>= (get expiration swap) block-height) ERR_ESCROW_EXPIRED)
+      (map-set supplier-escrow supplier-id (- escrowed xbtc))
+      (update-user-inbound-volume swapper xbtc)
+      (print (merge swap {
+        preimage: preimage,
+        topic: "finalize-inbound",
+        txid: txid,
+      }))
+      (ok swap)
+    )
+  )
+)
+
+;; Finalize an inbound swap by revealing the preimage.
+;; Validates that `sha256(preimage)` is equal to the `hash` provided when
+;; escrowing the swap.
+;;
+;; @returns metadata relating to the swap (see `inbound-swaps` map)
+;;
+;; @param txid; the txid of the BTC tx used for this inbound swap
+;; @param preimage; the preimage that hashes to the swap's `hash`
+(define-public (finalize-swap-v2 (txid (buff 32)) (preimage (buff 128)))
+  (match (map-get? inbound-preimages txid)
+    existing ERR_ALREADY_FINALIZED
+    (let
+      (
+        (swap (unwrap! (map-get? inbound-swaps-v2 txid) ERR_INVALID_ESCROW))
+        (stored-hash (get hash swap))
+        (preimage-ok (asserts! (is-eq (sha256 preimage) stored-hash) ERR_INVALID_PREIMAGE))
+        (supplier-id (get supplier swap))
+        (xbtc (get xbtc swap))
+        (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
+        (swapper (get swapper swap))
       )
       (map-insert inbound-preimages txid preimage)
       (try! (as-contract (transfer xbtc tx-sender swapper)))
@@ -819,6 +959,27 @@
 
 ;; htlc
 
+(define-read-only (generate-htlc-script-v2
+    (sender (buff 33))
+    (recipient (buff 33))
+    (expiration (buff 4))
+    (hash (buff 32))
+    (metadata (buff 32))
+  )
+  (concat 0x20
+  (concat metadata
+  (concat 0x7563a820 ;; DROP; IF; PUSH32
+  (concat hash
+  (concat 0x8821 ;; EQUALVERIFY; PUSH33
+  (concat recipient
+  (concat 0x67 ;; ELSE
+  (concat (bytes-len expiration)
+  (concat expiration
+  (concat 0xb27521 ;; CHECKSEQUENCEVERIFY; DROP; PUSH33
+  (concat sender 0x68ac) ;; ENDIF; CHECKSIG;
+  ))))))))))
+)
+
 (define-read-only (generate-htlc-script
     (sender (buff 33))
     (recipient (buff 33))
@@ -845,8 +1006,8 @@
   )
 )
 
-(define-read-only (generate-script-hash (script (buff 120)))
-  (generate-p2sh-output (hash160 script))
+(define-read-only (generate-script-hash (script (buff 148)))
+  (concat (concat 0xa914 (hash160 script)) 0x87)
 )
 
 (define-read-only (generate-htlc-script-hash

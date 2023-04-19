@@ -10,8 +10,8 @@ import {
   expect,
   Receipts,
   TxCall,
-  ContractCallFunction,
   UnknownArgs,
+  ContractCallTyped,
 } from "../deps.ts";
 import { createHtlcScript, generateHtlcTx, HTLC } from "../src/htlc.ts";
 import { contracts } from "./clarigen.ts";
@@ -41,13 +41,20 @@ const proof = {
 
 type Receipt<T> = Receipts<T[]>[number];
 
-type TxReceipt<T> = T extends ContractCallFunction<UnknownArgs, infer R>
-  ? Receipt<TxCall<R>>
+// deno-lint-ignore no-explicit-any
+type TxReceipt<T> = T extends (...args: any) => any
+  ? ReturnType<T> extends ContractCallTyped<UnknownArgs, infer R>
+    ? Receipt<TxCall<R>>
+    : never
+  : never;
+// deno-lint-ignore no-explicit-any
+type TxReceiptOk<T> = T extends (...args: any) => any
+  ? ReturnType<T> extends ContractCallTyped<UnknownArgs, infer R>
+    ? Receipt<TxCall<R, true>>
+    : never
   : never;
 
-type TxReceiptOk<T> = T extends ContractCallFunction<UnknownArgs, infer R>
-  ? Receipt<TxCall<R, true>>
-  : never;
+type FinalizeReceipt = TxReceiptOk<typeof magic["finalizeOutboundSwap"]>;
 
 function hashMetadata(chain: Chain, minAmount: bigint, recipient: string) {
   return chain.rov(
@@ -174,7 +181,7 @@ describe("magic tests", () => {
     });
 
     it("can escrow with a valid transaction", () => {
-      const receipt = chain.txOk(
+      chain.txOk(
         magic.escrowSwapV2({
           block: {
             header: new Uint8Array([]),
@@ -194,8 +201,6 @@ describe("magic tests", () => {
         }),
         swapper
       );
-
-      // receipt.events.expectFungibleTokenTransferEvent(xbtc, magic.identifier, swapper,)
     });
 
     it("escrow state is stored", () => {
@@ -257,10 +262,10 @@ describe("magic tests", () => {
     });
 
     describe("finalizing", () => {
-      // let receipt: TxReceiptOk<typeof magic["finalizeSwapV2"]>;
+      let receipt: TxReceiptOk<typeof magic["finalizeSwapV2"]>;
 
       it("can successfully finalize", () => {
-        const receipt = chain.txOk(
+        receipt = chain.txOk(
           magic.finalizeSwapV2({
             preimage,
             txid: hex.decode(txid),

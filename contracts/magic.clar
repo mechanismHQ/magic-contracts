@@ -716,7 +716,7 @@
 )
 
 (define-read-only (get-inbound-swap (txid (buff 32)))
-  (map-get? inbound-swaps txid)
+  (map-get? inbound-swaps-v2 txid)
 )
 
 (define-read-only (get-preimage (txid (buff 32)))
@@ -767,9 +767,9 @@
     (
       (swap (unwrap! (get-inbound-swap txid) ERR_INVALID_ESCROW))
       (meta (unwrap! (get-inbound-meta txid) ERR_INVALID_ESCROW))
-      (swapper-principal (unwrap! (get-swapper-principal (get swapper swap)) ERR_PANIC))
+      ;; (swapper-principal (unwrap! (get-swapper-principal (get swapper swap)) ERR_PANIC))
     )
-    (ok (merge { swapper-principal: swapper-principal } (merge swap meta)))
+    (ok (merge swap meta))
   )
 )
 

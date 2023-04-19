@@ -3836,8 +3836,7 @@ export const contracts = {
                     "type": { "buffer": { "length": 33 } },
                   },
                   { "name": "supplier", "type": "uint128" },
-                  { "name": "swapper", "type": "uint128" },
-                  { "name": "swapper-principal", "type": "principal" },
+                  { "name": "swapper", "type": "principal" },
                   { "name": "xbtc", "type": "uint128" },
                 ],
               },
@@ -3856,8 +3855,7 @@ export const contracts = {
           "sats": bigint;
           "senderPublicKey": Uint8Array;
           "supplier": bigint;
-          "swapper": bigint;
-          "swapperPrincipal": string;
+          "swapper": string;
           "xbtc": bigint;
         }, bigint>
       >,
@@ -3950,7 +3948,7 @@ export const contracts = {
                 { "name": "expiration", "type": "uint128" },
                 { "name": "hash", "type": { "buffer": { "length": 32 } } },
                 { "name": "supplier", "type": "uint128" },
-                { "name": "swapper", "type": "uint128" },
+                { "name": "swapper", "type": "principal" },
                 { "name": "xbtc", "type": "uint128" },
               ],
             },
@@ -3962,7 +3960,7 @@ export const contracts = {
           "expiration": bigint;
           "hash": Uint8Array;
           "supplier": bigint;
-          "swapper": bigint;
+          "swapper": string;
           "xbtc": bigint;
         } | null
       >,
@@ -5285,6 +5283,75 @@ export const contracts = {
     "clarity_version": "Clarity1",
     contractName: "restricted-token-trait",
   },
+  testUtils: {
+    "functions": {
+      setBurnHeader: {
+        "name": "set-burn-header",
+        "access": "public",
+        "args": [{ "name": "height", "type": "uint128" }, {
+          "name": "header",
+          "type": { "buffer": { "length": 80 } },
+        }],
+        "outputs": {
+          "type": { "response": { "ok": "bool", "error": "none" } },
+        },
+      } as TypedAbiFunction<
+        [
+          height: TypedAbiArg<number | bigint, "height">,
+          header: TypedAbiArg<Uint8Array, "header">,
+        ],
+        Response<boolean, null>
+      >,
+      setMined: {
+        "name": "set-mined",
+        "access": "public",
+        "args": [{ "name": "txid", "type": { "buffer": { "length": 32 } } }],
+        "outputs": {
+          "type": { "response": { "ok": "bool", "error": "none" } },
+        },
+      } as TypedAbiFunction<
+        [txid: TypedAbiArg<Uint8Array, "txid">],
+        Response<boolean, null>
+      >,
+      burnBlockHeader: {
+        "name": "burn-block-header",
+        "access": "read_only",
+        "args": [{ "name": "height", "type": "uint128" }],
+        "outputs": { "type": { "optional": { "buffer": { "length": 80 } } } },
+      } as TypedAbiFunction<
+        [height: TypedAbiArg<number | bigint, "height">],
+        Uint8Array | null
+      >,
+      wasMined: {
+        "name": "was-mined",
+        "access": "read_only",
+        "args": [{ "name": "txid", "type": { "buffer": { "length": 32 } } }],
+        "outputs": { "type": { "optional": "bool" } },
+      } as TypedAbiFunction<
+        [txid: TypedAbiArg<Uint8Array, "txid">],
+        boolean | null
+      >,
+    },
+    "maps": {
+      burnBlockHeaders: {
+        "name": "burn-block-headers",
+        "key": "uint128",
+        "value": { "buffer": { "length": 80 } },
+      } as TypedAbiMap<number | bigint, Uint8Array>,
+      minedTxs: {
+        "name": "mined-txs",
+        "key": { "buffer": { "length": 32 } },
+        "value": "bool",
+      } as TypedAbiMap<Uint8Array, boolean>,
+    },
+    "variables": {},
+    constants: {},
+    "non_fungible_tokens": [],
+    "fungible_tokens": [],
+    "epoch": "Epoch21",
+    "clarity_version": "Clarity2",
+    contractName: "test-utils",
+  },
   wrappedBitcoin: {
     "functions": {
       addPrincipalToRole: {
@@ -5757,7 +5824,20 @@ export const accounts = {
   },
 } as const;
 
+export const identifiers = {
+  "clarityBitcoin": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.clarity-bitcoin",
+  "clarityBitcoinV2":
+    "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.clarity-bitcoin-v2",
+  "ftTrait": "SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.ft-trait",
+  "magic": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.magic",
+  "restrictedTokenTrait":
+    "SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.restricted-token-trait",
+  "testUtils": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.test-utils",
+  "wrappedBitcoin": "SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.Wrapped-Bitcoin",
+} as const;
+
 export const simnet = {
   accounts,
   contracts,
+  identifiers,
 } as const;

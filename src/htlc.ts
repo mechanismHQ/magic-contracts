@@ -148,7 +148,7 @@ export function generateLegacyHtlcTx(htlc: LegacyHTLC) {
   return tx;
 }
 
-export function generateHtlcTx(htlc: HTLC) {
+export function generateHtlcTx(htlc: HTLC, _amount?: bigint) {
   const htlcScript = createHtlcScript(htlc);
   const privKey = hex.decode(
     "0101010101010101010101010101010101010101010101010101010101010101"
@@ -156,13 +156,14 @@ export function generateHtlcTx(htlc: HTLC) {
   const opts = { version: 1, allowLegacyWitnessUtxo: true };
   const tx = new btc.Transaction(opts);
   const pub = secp256k1.getPublicKey(privKey, true);
+  const amount = _amount ?? 10000n;
   tx.addInput({
     txid: hex.decode(
       "c061c23190ed3370ad5206769651eaf6fac6d87d85b5db34e30a74e0c4a6da3e"
     ),
     index: 0,
     witnessUtxo: {
-      amount: 10100n,
+      amount: amount + 100n,
       script: btc.p2pkh(pub).script,
     },
   });
@@ -174,9 +175,10 @@ export function generateHtlcTx(htlc: HTLC) {
   tx.addOutput({
     redeemScript: htlcScript,
     script: out,
-    amount: 10000n,
+    amount: amount,
   });
 
   tx.signIdx(privKey, 0);
+  tx.finalize();
   return tx;
 }

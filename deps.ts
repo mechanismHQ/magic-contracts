@@ -7,13 +7,18 @@ export {
   err,
   factory,
   valueToCV,
-} from "https://deno.land/x/clarigen@v0.5.4/mod.ts";
+} from "https://deno.land/x/clarigen@v0.5.5/mod.ts";
 export type {
   FullContract,
   ContractCallTyped,
   UnknownArgs,
   Response,
-} from "https://deno.land/x/clarigen@v0.5.4/mod.ts";
+  TypedAbiFunction,
+  UnknownArg,
+  TxCall,
+  Receipts,
+  ContractCallFunction,
+} from "https://deno.land/x/clarigen@v0.5.5/mod.ts";
 export {
   afterAll,
   beforeAll,
@@ -41,3 +46,4 @@ export {
   randomBytes,
 } from "./vendor/noble-hashes/utils.ts";
 export { sha256 } from "./vendor/noble-hashes/sha256.ts";
+export { expect } from "https://deno.land/x/expect@v0.3.0/mod.ts";

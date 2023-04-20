@@ -3022,21 +3022,6 @@ export const contracts = {
   },
   magic: {
     "functions": {
-      concatBuffsFold: {
-        "name": "concat-buffs-fold",
-        "access": "private",
-        "args": [{ "name": "b", "type": { "buffer": { "length": 32 } } }, {
-          "name": "result",
-          "type": { "buffer": { "length": 192 } },
-        }],
-        "outputs": { "type": { "buffer": { "length": 192 } } },
-      } as TypedAbiFunction<
-        [
-          b: TypedAbiArg<Uint8Array, "b">,
-          result: TypedAbiArg<Uint8Array, "result">,
-        ],
-        Uint8Array
-      >,
       transfer: {
         "name": "transfer",
         "access": "private",
@@ -3095,105 +3080,6 @@ export const contracts = {
       } as TypedAbiFunction<
         [amount: TypedAbiArg<number | bigint, "amount">],
         Response<bigint, bigint>
-      >,
-      escrowSwap: {
-        "name": "escrow-swap",
-        "access": "public",
-        "args": [
-          {
-            "name": "block",
-            "type": {
-              "tuple": [{
-                "name": "header",
-                "type": { "buffer": { "length": 80 } },
-              }, { "name": "height", "type": "uint128" }],
-            },
-          },
-          {
-            "name": "prev-blocks",
-            "type": {
-              "list": { "type": { "buffer": { "length": 80 } }, "length": 10 },
-            },
-          },
-          { "name": "tx", "type": { "buffer": { "length": 1024 } } },
-          {
-            "name": "proof",
-            "type": {
-              "tuple": [
-                {
-                  "name": "hashes",
-                  "type": {
-                    "list": {
-                      "type": { "buffer": { "length": 32 } },
-                      "length": 12,
-                    },
-                  },
-                },
-                { "name": "tree-depth", "type": "uint128" },
-                { "name": "tx-index", "type": "uint128" },
-              ],
-            },
-          },
-          { "name": "output-index", "type": "uint128" },
-          { "name": "sender", "type": { "buffer": { "length": 33 } } },
-          { "name": "recipient", "type": { "buffer": { "length": 33 } } },
-          { "name": "expiration-buff", "type": { "buffer": { "length": 4 } } },
-          { "name": "hash", "type": { "buffer": { "length": 32 } } },
-          { "name": "swapper-buff", "type": { "buffer": { "length": 4 } } },
-          { "name": "supplier-id", "type": "uint128" },
-          { "name": "min-to-receive", "type": "uint128" },
-        ],
-        "outputs": {
-          "type": {
-            "response": {
-              "ok": {
-                "tuple": [
-                  { "name": "csv", "type": "uint128" },
-                  { "name": "output-index", "type": "uint128" },
-                  {
-                    "name": "redeem-script",
-                    "type": { "buffer": { "length": 120 } },
-                  },
-                  { "name": "sats", "type": "uint128" },
-                  {
-                    "name": "sender-public-key",
-                    "type": { "buffer": { "length": 33 } },
-                  },
-                ],
-              },
-              "error": "uint128",
-            },
-          },
-        },
-      } as TypedAbiFunction<
-        [
-          block: TypedAbiArg<{
-            "header": Uint8Array;
-            "height": number | bigint;
-          }, "block">,
-          prevBlocks: TypedAbiArg<Uint8Array[], "prevBlocks">,
-          tx: TypedAbiArg<Uint8Array, "tx">,
-          proof: TypedAbiArg<{
-            "hashes": Uint8Array[];
-            "treeDepth": number | bigint;
-            "txIndex": number | bigint;
-          }, "proof">,
-          outputIndex: TypedAbiArg<number | bigint, "outputIndex">,
-          sender: TypedAbiArg<Uint8Array, "sender">,
-          recipient: TypedAbiArg<Uint8Array, "recipient">,
-          expirationBuff: TypedAbiArg<Uint8Array, "expirationBuff">,
-          hash: TypedAbiArg<Uint8Array, "hash">,
-          swapperBuff: TypedAbiArg<Uint8Array, "swapperBuff">,
-          supplierId: TypedAbiArg<number | bigint, "supplierId">,
-          minToReceive: TypedAbiArg<number | bigint, "minToReceive">,
-        ],
-        Response<{
-          "csv": bigint;
-          "outputIndex": bigint;
-          "redeemScript": Uint8Array;
-          "sats": bigint;
-          "senderPublicKey": Uint8Array;
-        }, bigint>
       >,
       escrowSwapV2: {
         "name": "escrow-swap-v2",
@@ -3294,65 +3180,6 @@ export const contracts = {
           "senderPublicKey": Uint8Array;
         }, bigint>
       >,
-      finalizeOutboundSwap: {
-        "name": "finalize-outbound-swap",
-        "access": "public",
-        "args": [
-          {
-            "name": "block",
-            "type": {
-              "tuple": [{
-                "name": "header",
-                "type": { "buffer": { "length": 80 } },
-              }, { "name": "height", "type": "uint128" }],
-            },
-          },
-          {
-            "name": "prev-blocks",
-            "type": {
-              "list": { "type": { "buffer": { "length": 80 } }, "length": 10 },
-            },
-          },
-          { "name": "tx", "type": { "buffer": { "length": 1024 } } },
-          {
-            "name": "proof",
-            "type": {
-              "tuple": [
-                {
-                  "name": "hashes",
-                  "type": {
-                    "list": {
-                      "type": { "buffer": { "length": 32 } },
-                      "length": 12,
-                    },
-                  },
-                },
-                { "name": "tree-depth", "type": "uint128" },
-                { "name": "tx-index", "type": "uint128" },
-              ],
-            },
-          },
-          { "name": "output-index", "type": "uint128" },
-          { "name": "swap-id", "type": "uint128" },
-        ],
-        "outputs": {
-          "type": { "response": { "ok": "bool", "error": "uint128" } },
-        },
-      } as TypedAbiFunction<[
-        block: TypedAbiArg<{
-          "header": Uint8Array;
-          "height": number | bigint;
-        }, "block">,
-        prevBlocks: TypedAbiArg<Uint8Array[], "prevBlocks">,
-        tx: TypedAbiArg<Uint8Array, "tx">,
-        proof: TypedAbiArg<{
-          "hashes": Uint8Array[];
-          "treeDepth": number | bigint;
-          "txIndex": number | bigint;
-        }, "proof">,
-        outputIndex: TypedAbiArg<number | bigint, "outputIndex">,
-        swapId: TypedAbiArg<number | bigint, "swapId">,
-      ], Response<boolean, bigint>>,
       finalizeOutboundSwapV2: {
         "name": "finalize-outbound-swap-v2",
         "access": "public",
@@ -3412,42 +3239,6 @@ export const contracts = {
         outputIndex: TypedAbiArg<number | bigint, "outputIndex">,
         swapId: TypedAbiArg<number | bigint, "swapId">,
       ], Response<boolean, bigint>>,
-      finalizeSwap: {
-        "name": "finalize-swap",
-        "access": "public",
-        "args": [{ "name": "txid", "type": { "buffer": { "length": 32 } } }, {
-          "name": "preimage",
-          "type": { "buffer": { "length": 128 } },
-        }],
-        "outputs": {
-          "type": {
-            "response": {
-              "ok": {
-                "tuple": [
-                  { "name": "expiration", "type": "uint128" },
-                  { "name": "hash", "type": { "buffer": { "length": 32 } } },
-                  { "name": "supplier", "type": "uint128" },
-                  { "name": "swapper", "type": "uint128" },
-                  { "name": "xbtc", "type": "uint128" },
-                ],
-              },
-              "error": "uint128",
-            },
-          },
-        },
-      } as TypedAbiFunction<
-        [
-          txid: TypedAbiArg<Uint8Array, "txid">,
-          preimage: TypedAbiArg<Uint8Array, "preimage">,
-        ],
-        Response<{
-          "expiration": bigint;
-          "hash": Uint8Array;
-          "supplier": bigint;
-          "swapper": bigint;
-          "xbtc": bigint;
-        }, bigint>
-      >,
       finalizeSwapV2: {
         "name": "finalize-swap-v2",
         "access": "public",
@@ -3483,35 +3274,6 @@ export const contracts = {
           "swapper": string;
           "xbtc": bigint;
         }, bigint>
-      >,
-      initializeSwapper: {
-        "name": "initialize-swapper",
-        "access": "public",
-        "args": [],
-        "outputs": {
-          "type": { "response": { "ok": "uint128", "error": "uint128" } },
-        },
-      } as TypedAbiFunction<[], Response<bigint, bigint>>,
-      initiateOutboundSwap: {
-        "name": "initiate-outbound-swap",
-        "access": "public",
-        "args": [
-          { "name": "xbtc", "type": "uint128" },
-          { "name": "btc-version", "type": { "buffer": { "length": 1 } } },
-          { "name": "btc-hash", "type": { "buffer": { "length": 20 } } },
-          { "name": "supplier-id", "type": "uint128" },
-        ],
-        "outputs": {
-          "type": { "response": { "ok": "uint128", "error": "uint128" } },
-        },
-      } as TypedAbiFunction<
-        [
-          xbtc: TypedAbiArg<number | bigint, "xbtc">,
-          btcVersion: TypedAbiArg<Uint8Array, "btcVersion">,
-          btcHash: TypedAbiArg<Uint8Array, "btcHash">,
-          supplierId: TypedAbiArg<number | bigint, "supplierId">,
-        ],
-        Response<bigint, bigint>
       >,
       initiateOutboundSwapV2: {
         "name": "initiate-outbound-swap-v2",
@@ -3712,12 +3474,6 @@ export const contracts = {
           "publicKey": Uint8Array;
         }, bigint>
       >,
-      buffToU8: {
-        "name": "buff-to-u8",
-        "access": "read_only",
-        "args": [{ "name": "byte", "type": { "buffer": { "length": 1 } } }],
-        "outputs": { "type": "uint128" },
-      } as TypedAbiFunction<[byte: TypedAbiArg<Uint8Array, "byte">], bigint>,
       bytesLen: {
         "name": "bytes-len",
         "access": "read_only",
@@ -3725,62 +3481,6 @@ export const contracts = {
         "outputs": { "type": { "buffer": { "length": 1 } } },
       } as TypedAbiFunction<
         [bytes: TypedAbiArg<Uint8Array, "bytes">],
-        Uint8Array
-      >,
-      concatBuffs: {
-        "name": "concat-buffs",
-        "access": "read_only",
-        "args": [{
-          "name": "buffs",
-          "type": {
-            "list": { "type": { "buffer": { "length": 32 } }, "length": 6 },
-          },
-        }],
-        "outputs": { "type": { "buffer": { "length": 192 } } },
-      } as TypedAbiFunction<
-        [buffs: TypedAbiArg<Uint8Array[], "buffs">],
-        Uint8Array
-      >,
-      generateHtlcScript: {
-        "name": "generate-htlc-script",
-        "access": "read_only",
-        "args": [
-          { "name": "sender", "type": { "buffer": { "length": 33 } } },
-          { "name": "recipient", "type": { "buffer": { "length": 33 } } },
-          { "name": "expiration", "type": { "buffer": { "length": 4 } } },
-          { "name": "hash", "type": { "buffer": { "length": 32 } } },
-          { "name": "swapper", "type": { "buffer": { "length": 4 } } },
-        ],
-        "outputs": { "type": { "buffer": { "length": 120 } } },
-      } as TypedAbiFunction<
-        [
-          sender: TypedAbiArg<Uint8Array, "sender">,
-          recipient: TypedAbiArg<Uint8Array, "recipient">,
-          expiration: TypedAbiArg<Uint8Array, "expiration">,
-          hash: TypedAbiArg<Uint8Array, "hash">,
-          swapper: TypedAbiArg<Uint8Array, "swapper">,
-        ],
-        Uint8Array
-      >,
-      generateHtlcScriptHash: {
-        "name": "generate-htlc-script-hash",
-        "access": "read_only",
-        "args": [
-          { "name": "sender", "type": { "buffer": { "length": 33 } } },
-          { "name": "recipient", "type": { "buffer": { "length": 33 } } },
-          { "name": "expiration", "type": { "buffer": { "length": 4 } } },
-          { "name": "hash", "type": { "buffer": { "length": 32 } } },
-          { "name": "swapper", "type": { "buffer": { "length": 4 } } },
-        ],
-        "outputs": { "type": { "buffer": { "length": 23 } } },
-      } as TypedAbiFunction<
-        [
-          sender: TypedAbiArg<Uint8Array, "sender">,
-          recipient: TypedAbiArg<Uint8Array, "recipient">,
-          expiration: TypedAbiArg<Uint8Array, "expiration">,
-          hash: TypedAbiArg<Uint8Array, "hash">,
-          swapper: TypedAbiArg<Uint8Array, "swapper">,
-        ],
         Uint8Array
       >,
       generateHtlcScriptV2: {
@@ -3802,39 +3502,6 @@ export const contracts = {
           hash: TypedAbiArg<Uint8Array, "hash">,
           metadata: TypedAbiArg<Uint8Array, "metadata">,
         ],
-        Uint8Array
-      >,
-      generateOutput: {
-        "name": "generate-output",
-        "access": "read_only",
-        "args": [{ "name": "version", "type": { "buffer": { "length": 1 } } }, {
-          "name": "hash",
-          "type": { "buffer": { "length": 20 } },
-        }],
-        "outputs": { "type": { "buffer": { "length": 25 } } },
-      } as TypedAbiFunction<
-        [
-          version: TypedAbiArg<Uint8Array, "version">,
-          hash: TypedAbiArg<Uint8Array, "hash">,
-        ],
-        Uint8Array
-      >,
-      generateP2pkhOutput: {
-        "name": "generate-p2pkh-output",
-        "access": "read_only",
-        "args": [{ "name": "hash", "type": { "buffer": { "length": 20 } } }],
-        "outputs": { "type": { "buffer": { "length": 25 } } },
-      } as TypedAbiFunction<
-        [hash: TypedAbiArg<Uint8Array, "hash">],
-        Uint8Array
-      >,
-      generateP2shOutput: {
-        "name": "generate-p2sh-output",
-        "access": "read_only",
-        "args": [{ "name": "hash", "type": { "buffer": { "length": 20 } } }],
-        "outputs": { "type": { "buffer": { "length": 23 } } },
-      } as TypedAbiFunction<
-        [hash: TypedAbiArg<Uint8Array, "hash">],
         Uint8Array
       >,
       generateScriptHash: {
@@ -4051,12 +3718,6 @@ export const contracts = {
         "args": [],
         "outputs": { "type": "uint128" },
       } as TypedAbiFunction<[], bigint>,
-      getNextSwapperId: {
-        "name": "get-next-swapper-id",
-        "access": "read_only",
-        "args": [],
-        "outputs": { "type": "uint128" },
-      } as TypedAbiFunction<[], bigint>,
       getOutboundSwap: {
         "name": "get-outbound-swap",
         "access": "read_only",
@@ -4166,24 +3827,6 @@ export const contracts = {
         ],
         Response<bigint, bigint>
       >,
-      getSwapperId: {
-        "name": "get-swapper-id",
-        "access": "read_only",
-        "args": [{ "name": "swapper", "type": "principal" }],
-        "outputs": { "type": { "optional": "uint128" } },
-      } as TypedAbiFunction<
-        [swapper: TypedAbiArg<string, "swapper">],
-        bigint | null
-      >,
-      getSwapperPrincipal: {
-        "name": "get-swapper-principal",
-        "access": "read_only",
-        "args": [{ "name": "id", "type": "uint128" }],
-        "outputs": { "type": { "optional": "principal" } },
-      } as TypedAbiFunction<
-        [id: TypedAbiArg<number | bigint, "id">],
-        string | null
-      >,
       getTotalInboundVolume: {
         "name": "get-total-inbound-volume",
         "access": "read_only",
@@ -4234,34 +3877,6 @@ export const contracts = {
           minAmount: TypedAbiArg<number | bigint, "minAmount">,
         ],
         Uint8Array
-      >,
-      readUint32: {
-        "name": "read-uint32",
-        "access": "read_only",
-        "args": [{ "name": "num", "type": { "buffer": { "length": 4 } } }, {
-          "name": "length",
-          "type": "uint128",
-        }],
-        "outputs": {
-          "type": { "response": { "ok": "uint128", "error": "uint128" } },
-        },
-      } as TypedAbiFunction<
-        [
-          num: TypedAbiArg<Uint8Array, "num">,
-          length: TypedAbiArg<number | bigint, "length">,
-        ],
-        Response<bigint, bigint>
-      >,
-      readUint32V2: {
-        "name": "read-uint32-v2",
-        "access": "read_only",
-        "args": [{ "name": "num", "type": { "buffer": { "length": 4 } } }],
-        "outputs": {
-          "type": { "response": { "ok": "uint128", "error": "uint128" } },
-        },
-      } as TypedAbiFunction<
-        [num: TypedAbiArg<Uint8Array, "num">],
-        Response<bigint, bigint>
       >,
       readVarint: {
         "name": "read-varint",
@@ -4578,7 +4193,7 @@ export const contracts = {
                 length: 1,
               },
             },
-            length: 256,
+            length: 5,
           },
         },
         access: "constant",
@@ -4972,257 +4587,6 @@ export const contracts = {
         Uint8Array.from([2]),
         Uint8Array.from([3]),
         Uint8Array.from([4]),
-        Uint8Array.from([5]),
-        Uint8Array.from([6]),
-        Uint8Array.from([7]),
-        Uint8Array.from([8]),
-        Uint8Array.from([9]),
-        Uint8Array.from([10]),
-        Uint8Array.from([11]),
-        Uint8Array.from([12]),
-        Uint8Array.from([13]),
-        Uint8Array.from([14]),
-        Uint8Array.from([15]),
-        Uint8Array.from([16]),
-        Uint8Array.from([17]),
-        Uint8Array.from([18]),
-        Uint8Array.from([19]),
-        Uint8Array.from([20]),
-        Uint8Array.from([21]),
-        Uint8Array.from([22]),
-        Uint8Array.from([23]),
-        Uint8Array.from([24]),
-        Uint8Array.from([25]),
-        Uint8Array.from([26]),
-        Uint8Array.from([27]),
-        Uint8Array.from([28]),
-        Uint8Array.from([29]),
-        Uint8Array.from([30]),
-        Uint8Array.from([31]),
-        Uint8Array.from([32]),
-        Uint8Array.from([33]),
-        Uint8Array.from([34]),
-        Uint8Array.from([35]),
-        Uint8Array.from([36]),
-        Uint8Array.from([37]),
-        Uint8Array.from([38]),
-        Uint8Array.from([39]),
-        Uint8Array.from([40]),
-        Uint8Array.from([41]),
-        Uint8Array.from([42]),
-        Uint8Array.from([43]),
-        Uint8Array.from([44]),
-        Uint8Array.from([45]),
-        Uint8Array.from([46]),
-        Uint8Array.from([47]),
-        Uint8Array.from([48]),
-        Uint8Array.from([49]),
-        Uint8Array.from([50]),
-        Uint8Array.from([51]),
-        Uint8Array.from([52]),
-        Uint8Array.from([53]),
-        Uint8Array.from([54]),
-        Uint8Array.from([55]),
-        Uint8Array.from([56]),
-        Uint8Array.from([57]),
-        Uint8Array.from([58]),
-        Uint8Array.from([59]),
-        Uint8Array.from([60]),
-        Uint8Array.from([61]),
-        Uint8Array.from([62]),
-        Uint8Array.from([63]),
-        Uint8Array.from([64]),
-        Uint8Array.from([65]),
-        Uint8Array.from([66]),
-        Uint8Array.from([67]),
-        Uint8Array.from([68]),
-        Uint8Array.from([69]),
-        Uint8Array.from([70]),
-        Uint8Array.from([71]),
-        Uint8Array.from([72]),
-        Uint8Array.from([73]),
-        Uint8Array.from([74]),
-        Uint8Array.from([75]),
-        Uint8Array.from([76]),
-        Uint8Array.from([77]),
-        Uint8Array.from([78]),
-        Uint8Array.from([79]),
-        Uint8Array.from([80]),
-        Uint8Array.from([81]),
-        Uint8Array.from([82]),
-        Uint8Array.from([83]),
-        Uint8Array.from([84]),
-        Uint8Array.from([85]),
-        Uint8Array.from([86]),
-        Uint8Array.from([87]),
-        Uint8Array.from([88]),
-        Uint8Array.from([89]),
-        Uint8Array.from([90]),
-        Uint8Array.from([91]),
-        Uint8Array.from([92]),
-        Uint8Array.from([93]),
-        Uint8Array.from([94]),
-        Uint8Array.from([95]),
-        Uint8Array.from([96]),
-        Uint8Array.from([97]),
-        Uint8Array.from([98]),
-        Uint8Array.from([99]),
-        Uint8Array.from([100]),
-        Uint8Array.from([101]),
-        Uint8Array.from([102]),
-        Uint8Array.from([103]),
-        Uint8Array.from([104]),
-        Uint8Array.from([105]),
-        Uint8Array.from([106]),
-        Uint8Array.from([107]),
-        Uint8Array.from([108]),
-        Uint8Array.from([109]),
-        Uint8Array.from([110]),
-        Uint8Array.from([111]),
-        Uint8Array.from([112]),
-        Uint8Array.from([113]),
-        Uint8Array.from([114]),
-        Uint8Array.from([115]),
-        Uint8Array.from([116]),
-        Uint8Array.from([117]),
-        Uint8Array.from([118]),
-        Uint8Array.from([119]),
-        Uint8Array.from([120]),
-        Uint8Array.from([121]),
-        Uint8Array.from([122]),
-        Uint8Array.from([123]),
-        Uint8Array.from([124]),
-        Uint8Array.from([125]),
-        Uint8Array.from([126]),
-        Uint8Array.from([127]),
-        Uint8Array.from([128]),
-        Uint8Array.from([129]),
-        Uint8Array.from([130]),
-        Uint8Array.from([131]),
-        Uint8Array.from([132]),
-        Uint8Array.from([133]),
-        Uint8Array.from([134]),
-        Uint8Array.from([135]),
-        Uint8Array.from([136]),
-        Uint8Array.from([137]),
-        Uint8Array.from([138]),
-        Uint8Array.from([139]),
-        Uint8Array.from([140]),
-        Uint8Array.from([141]),
-        Uint8Array.from([142]),
-        Uint8Array.from([143]),
-        Uint8Array.from([144]),
-        Uint8Array.from([145]),
-        Uint8Array.from([146]),
-        Uint8Array.from([147]),
-        Uint8Array.from([148]),
-        Uint8Array.from([149]),
-        Uint8Array.from([150]),
-        Uint8Array.from([151]),
-        Uint8Array.from([152]),
-        Uint8Array.from([153]),
-        Uint8Array.from([154]),
-        Uint8Array.from([155]),
-        Uint8Array.from([156]),
-        Uint8Array.from([157]),
-        Uint8Array.from([158]),
-        Uint8Array.from([159]),
-        Uint8Array.from([160]),
-        Uint8Array.from([161]),
-        Uint8Array.from([162]),
-        Uint8Array.from([163]),
-        Uint8Array.from([164]),
-        Uint8Array.from([165]),
-        Uint8Array.from([166]),
-        Uint8Array.from([167]),
-        Uint8Array.from([168]),
-        Uint8Array.from([169]),
-        Uint8Array.from([170]),
-        Uint8Array.from([171]),
-        Uint8Array.from([172]),
-        Uint8Array.from([173]),
-        Uint8Array.from([174]),
-        Uint8Array.from([175]),
-        Uint8Array.from([176]),
-        Uint8Array.from([177]),
-        Uint8Array.from([178]),
-        Uint8Array.from([179]),
-        Uint8Array.from([180]),
-        Uint8Array.from([181]),
-        Uint8Array.from([182]),
-        Uint8Array.from([183]),
-        Uint8Array.from([184]),
-        Uint8Array.from([185]),
-        Uint8Array.from([186]),
-        Uint8Array.from([187]),
-        Uint8Array.from([188]),
-        Uint8Array.from([189]),
-        Uint8Array.from([190]),
-        Uint8Array.from([191]),
-        Uint8Array.from([192]),
-        Uint8Array.from([193]),
-        Uint8Array.from([194]),
-        Uint8Array.from([195]),
-        Uint8Array.from([196]),
-        Uint8Array.from([197]),
-        Uint8Array.from([198]),
-        Uint8Array.from([199]),
-        Uint8Array.from([200]),
-        Uint8Array.from([201]),
-        Uint8Array.from([202]),
-        Uint8Array.from([203]),
-        Uint8Array.from([204]),
-        Uint8Array.from([205]),
-        Uint8Array.from([206]),
-        Uint8Array.from([207]),
-        Uint8Array.from([208]),
-        Uint8Array.from([209]),
-        Uint8Array.from([210]),
-        Uint8Array.from([211]),
-        Uint8Array.from([212]),
-        Uint8Array.from([213]),
-        Uint8Array.from([214]),
-        Uint8Array.from([215]),
-        Uint8Array.from([216]),
-        Uint8Array.from([217]),
-        Uint8Array.from([218]),
-        Uint8Array.from([219]),
-        Uint8Array.from([220]),
-        Uint8Array.from([221]),
-        Uint8Array.from([222]),
-        Uint8Array.from([223]),
-        Uint8Array.from([224]),
-        Uint8Array.from([225]),
-        Uint8Array.from([226]),
-        Uint8Array.from([227]),
-        Uint8Array.from([228]),
-        Uint8Array.from([229]),
-        Uint8Array.from([230]),
-        Uint8Array.from([231]),
-        Uint8Array.from([232]),
-        Uint8Array.from([233]),
-        Uint8Array.from([234]),
-        Uint8Array.from([235]),
-        Uint8Array.from([236]),
-        Uint8Array.from([237]),
-        Uint8Array.from([238]),
-        Uint8Array.from([239]),
-        Uint8Array.from([240]),
-        Uint8Array.from([241]),
-        Uint8Array.from([242]),
-        Uint8Array.from([243]),
-        Uint8Array.from([244]),
-        Uint8Array.from([245]),
-        Uint8Array.from([246]),
-        Uint8Array.from([247]),
-        Uint8Array.from([248]),
-        Uint8Array.from([249]),
-        Uint8Array.from([250]),
-        Uint8Array.from([251]),
-        Uint8Array.from([252]),
-        Uint8Array.from([253]),
-        Uint8Array.from([254]),
-        Uint8Array.from([255]),
       ],
       ERR_ADD_FUNDS: {
         isOk: false,

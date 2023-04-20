@@ -4,3 +4,5 @@
 .cache/**
 history.txt
 .btcdeb_history
+coverage
+coverage.lcov

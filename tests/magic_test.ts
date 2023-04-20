@@ -39,22 +39,11 @@ describe("magic tests", () => {
     it("encoding varint", () => {
       const num = 500n;
       const buff = btc.CompactSize.encode(num);
-
-      const v1 = chain.rov(
-        magic.readUint32({ num: buff.slice(1), length: buff.length - 1 })
-      );
-
-      assertEquals(v1.value, num);
-
       const varint = chain.rovOk(magic.readVarint(buff));
       assertEquals(varint, num);
 
       const buff2 = hex.decode("64");
       const fromJs = btc.CompactSize.decode(buff2);
-      assertEquals(
-        chain.rovOk(magic.readUint32({ num: hex.decode("64"), length: 1 })),
-        fromJs
-      );
       assertEquals(chain.rovOk(magic.readVarint({ num: buff2 })), fromJs);
     });
 
@@ -67,7 +56,6 @@ describe("magic tests", () => {
       const address = btc.p2pkh(swapperKey).address!;
       const toOut = btc.Address().decode(address);
       const _out = btc.OutScript.encode(toOut);
-      // console.log(out);
     });
   });
 

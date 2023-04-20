@@ -5,65 +5,27 @@ import {
   hex,
   assertEquals,
   sha256,
-  Chain,
   beforeAll,
   expect,
-  Receipts,
-  TxCall,
-  UnknownArgs,
-  ContractCallTyped,
 } from "../deps.ts";
 import { createHtlcScript, generateHtlcTx, HTLC } from "../src/htlc.ts";
-import { contracts } from "./clarigen.ts";
-import { deploy } from "./helpers.ts";
-import { publicKey, publicKeys } from "./mocks.ts";
+import {
+  deploy,
+  magic,
+  testUtils,
+  xbtcContract,
+  xbtcAsset,
+  xbtcDeployer,
+  feeIn,
+  feeOut,
+  startingFunds,
+  supplierKey,
+  swapperKey,
+  proof,
+  TxReceiptOk,
+  hashMetadata,
+} from "./helpers.ts";
 import { getSwapAmount } from "./utils.ts";
-
-const magic = contracts.magic;
-const xbtcContract = contracts.wrappedBitcoin;
-const testUtils = contracts.testUtils;
-
-const [xbtcDeployer] = xbtcContract.identifier.split(".");
-
-const xbtcAsset = `${xbtcContract.identifier}::wrapped-bitcoin`;
-
-const feeIn = 300n;
-const feeOut = 100n;
-const startingFunds = 2n * 1000000n;
-
-const [supplierKey, swapperKey] = publicKeys;
-
-const proof = {
-  treeDepth: 1n,
-  txIndex: 1n,
-  hashes: [],
-};
-
-type Receipt<T> = Receipts<T[]>[number];
-
-// deno-lint-ignore no-explicit-any
-type TxReceipt<T> = T extends (...args: any) => any
-  ? ReturnType<T> extends ContractCallTyped<UnknownArgs, infer R>
-    ? Receipt<TxCall<R>>
-    : never
-  : never;
-// deno-lint-ignore no-explicit-any
-type TxReceiptOk<T> = T extends (...args: any) => any
-  ? ReturnType<T> extends ContractCallTyped<UnknownArgs, infer R>
-    ? Receipt<TxCall<R, true>>
-    : never
-  : never;
-
-type FinalizeReceipt = TxReceiptOk<typeof magic["finalizeOutboundSwap"]>;
-
-function hashMetadata(chain: Chain, minAmount: bigint, recipient: string) {
-  return chain.rov(
-    magic.hashMetadata({
-      swapper: recipient,
-      minAmount,
-    })
-  );
-}
 
 describe("magic tests", () => {
   const { chain, accounts } = deploy();
@@ -99,6 +61,13 @@ describe("magic tests", () => {
     it("serializing metadata", () => {
       const num = 1000000n;
       const _buff = chain.rov(magic.testSerializeUint(num));
+    });
+
+    it("encoding output scripts", () => {
+      const address = btc.p2pkh(swapperKey).address!;
+      const toOut = btc.Address().decode(address);
+      const _out = btc.OutScript.encode(toOut);
+      // console.log(out);
     });
   });
 
@@ -143,7 +112,7 @@ describe("magic tests", () => {
 
   it("cannot register with existing public key", () => {
     const receipt = chain.txErr(
-      magic.registerSupplier(publicKey, feeIn, feeOut, 0, 0, 0),
+      magic.registerSupplier(supplierKey, feeIn, feeOut, 0, 0, 0),
       deployer
     );
     assertEquals(receipt.value, magic.constants.ERR_SUPPLIER_EXISTS.value);
@@ -190,7 +159,7 @@ describe("magic tests", () => {
           prevBlocks: [],
           tx: tx.toBytes(true),
           outputIndex: 0,
-          recipient: publicKey,
+          recipient: supplierKey,
           minToReceive: minAmount,
           swapper,
           sender: swapperKey,
@@ -246,7 +215,7 @@ describe("magic tests", () => {
           prevBlocks: [],
           tx: tx.toBytes(true),
           outputIndex: 0,
-          recipient: publicKey,
+          recipient: supplierKey,
           minToReceive: minAmount,
           swapper,
           sender: swapperKey,

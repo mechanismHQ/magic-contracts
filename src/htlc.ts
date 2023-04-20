@@ -115,6 +115,10 @@ export function createHtlcScript(htlc: HTLC) {
   ]);
 }
 
+export const mockPrivateKey = hex.decode(
+  "0101010101010101010101010101010101010101010101010101010101010101"
+);
+
 export function generateLegacyHtlcTx(htlc: LegacyHTLC) {
   const htlcScript = createLegacyHtlcScript(htlc);
   const privKey = hex.decode(
@@ -148,11 +152,8 @@ export function generateLegacyHtlcTx(htlc: LegacyHTLC) {
   return tx;
 }
 
-export function generateHtlcTx(htlc: HTLC, _amount?: bigint) {
-  const htlcScript = createHtlcScript(htlc);
-  const privKey = hex.decode(
-    "0101010101010101010101010101010101010101010101010101010101010101"
-  );
+export function generateBaseTx(_amount?: bigint) {
+  const privKey = mockPrivateKey;
   const opts = { version: 1, allowLegacyWitnessUtxo: true };
   const tx = new btc.Transaction(opts);
   const pub = secp256k1.getPublicKey(privKey, true);
@@ -167,6 +168,15 @@ export function generateHtlcTx(htlc: HTLC, _amount?: bigint) {
       script: btc.p2wpkh(pub).script,
     },
   });
+
+  return tx;
+}
+
+export function generateHtlcTx(htlc: HTLC, _amount?: bigint) {
+  const htlcScript = createHtlcScript(htlc);
+  const privKey = mockPrivateKey;
+  const amount = _amount ?? 50000n;
+  const tx = generateBaseTx(amount);
   const out = btc.OutScript.encode({
     type: "sh",
     hash: hash160(htlcScript),

@@ -1,0 +1,5 @@
+scripts:
+  coverage:
+    cmd:
+      - clarinet test --coverage
+      - genhtml -o coverage/html coverage.lcov

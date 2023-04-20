@@ -3353,6 +3353,65 @@ export const contracts = {
         outputIndex: TypedAbiArg<number | bigint, "outputIndex">,
         swapId: TypedAbiArg<number | bigint, "swapId">,
       ], Response<boolean, bigint>>,
+      finalizeOutboundSwapV2: {
+        "name": "finalize-outbound-swap-v2",
+        "access": "public",
+        "args": [
+          {
+            "name": "block",
+            "type": {
+              "tuple": [{
+                "name": "header",
+                "type": { "buffer": { "length": 80 } },
+              }, { "name": "height", "type": "uint128" }],
+            },
+          },
+          {
+            "name": "prev-blocks",
+            "type": {
+              "list": { "type": { "buffer": { "length": 80 } }, "length": 10 },
+            },
+          },
+          { "name": "tx", "type": { "buffer": { "length": 1024 } } },
+          {
+            "name": "proof",
+            "type": {
+              "tuple": [
+                {
+                  "name": "hashes",
+                  "type": {
+                    "list": {
+                      "type": { "buffer": { "length": 32 } },
+                      "length": 12,
+                    },
+                  },
+                },
+                { "name": "tree-depth", "type": "uint128" },
+                { "name": "tx-index", "type": "uint128" },
+              ],
+            },
+          },
+          { "name": "output-index", "type": "uint128" },
+          { "name": "swap-id", "type": "uint128" },
+        ],
+        "outputs": {
+          "type": { "response": { "ok": "bool", "error": "uint128" } },
+        },
+      } as TypedAbiFunction<[
+        block: TypedAbiArg<{
+          "header": Uint8Array;
+          "height": number | bigint;
+        }, "block">,
+        prevBlocks: TypedAbiArg<Uint8Array[], "prevBlocks">,
+        tx: TypedAbiArg<Uint8Array, "tx">,
+        proof: TypedAbiArg<{
+          "hashes": Uint8Array[];
+          "treeDepth": number | bigint;
+          "txIndex": number | bigint;
+        }, "proof">,
+        outputIndex: TypedAbiArg<number | bigint, "outputIndex">,
+        swapId: TypedAbiArg<number | bigint, "swapId">,
+      ], Response<boolean, bigint>>,
       finalizeSwap: {
         "name": "finalize-swap",
         "access": "public",
@@ -3454,6 +3513,24 @@ export const contracts = {
         ],
         Response<bigint, bigint>
       >,
+      initiateOutboundSwapV2: {
+        "name": "initiate-outbound-swap-v2",
+        "access": "public",
+        "args": [{ "name": "xbtc", "type": "uint128" }, {
+          "name": "output",
+          "type": { "buffer": { "length": 128 } },
+        }, { "name": "supplier-id", "type": "uint128" }],
+        "outputs": {
+          "type": { "response": { "ok": "uint128", "error": "uint128" } },
+        },
+      } as TypedAbiFunction<
+        [
+          xbtc: TypedAbiArg<number | bigint, "xbtc">,
+          output: TypedAbiArg<Uint8Array, "output">,
+          supplierId: TypedAbiArg<number | bigint, "supplierId">,
+        ],
+        Response<bigint, bigint>
+      >,
       registerSupplier: {
         "name": "register-supplier",
         "access": "public",
@@ -3530,11 +3607,10 @@ export const contracts = {
               "ok": {
                 "tuple": [
                   { "name": "created-at", "type": "uint128" },
-                  { "name": "hash", "type": { "buffer": { "length": 20 } } },
+                  { "name": "output", "type": { "buffer": { "length": 128 } } },
                   { "name": "sats", "type": "uint128" },
                   { "name": "supplier", "type": "uint128" },
                   { "name": "swapper", "type": "principal" },
-                  { "name": "version", "type": { "buffer": { "length": 1 } } },
                   { "name": "xbtc", "type": "uint128" },
                 ],
               },
@@ -3546,11 +3622,10 @@ export const contracts = {
         [swapId: TypedAbiArg<number | bigint, "swapId">],
         Response<{
           "createdAt": bigint;
-          "hash": Uint8Array;
+          "output": Uint8Array;
           "sats": bigint;
           "supplier": bigint;
           "swapper": string;
-          "version": Uint8Array;
           "xbtc": bigint;
         }, bigint>
       >,
@@ -3991,11 +4066,10 @@ export const contracts = {
             "optional": {
               "tuple": [
                 { "name": "created-at", "type": "uint128" },
-                { "name": "hash", "type": { "buffer": { "length": 20 } } },
+                { "name": "output", "type": { "buffer": { "length": 128 } } },
                 { "name": "sats", "type": "uint128" },
                 { "name": "supplier", "type": "uint128" },
                 { "name": "swapper", "type": "principal" },
-                { "name": "version", "type": { "buffer": { "length": 1 } } },
                 { "name": "xbtc", "type": "uint128" },
               ],
             },
@@ -4005,11 +4079,10 @@ export const contracts = {
         [id: TypedAbiArg<number | bigint, "id">],
         {
           "createdAt": bigint;
-          "hash": Uint8Array;
+          "output": Uint8Array;
           "sats": bigint;
           "supplier": bigint;
           "swapper": string;
-          "version": Uint8Array;
           "xbtc": bigint;
         } | null
       >,
@@ -4287,11 +4360,10 @@ export const contracts = {
               "ok": {
                 "tuple": [
                   { "name": "created-at", "type": "uint128" },
-                  { "name": "hash", "type": { "buffer": { "length": 20 } } },
+                  { "name": "output", "type": { "buffer": { "length": 128 } } },
                   { "name": "sats", "type": "uint128" },
                   { "name": "supplier", "type": "uint128" },
                   { "name": "swapper", "type": "principal" },
-                  { "name": "version", "type": { "buffer": { "length": 1 } } },
                   { "name": "xbtc", "type": "uint128" },
                 ],
               },
@@ -4303,11 +4375,10 @@ export const contracts = {
         [swapId: TypedAbiArg<number | bigint, "swapId">],
         Response<{
           "createdAt": bigint;
-          "hash": Uint8Array;
+          "output": Uint8Array;
           "sats": bigint;
           "supplier": bigint;
           "swapper": string;
-          "version": Uint8Array;
           "xbtc": bigint;
         }, bigint>
       >,
@@ -4412,6 +4483,27 @@ export const contracts = {
         "supplier": bigint;
         "swapper": string;
         "version": Uint8Array;
+        "xbtc": bigint;
+      }>,
+      outboundSwapsV2: {
+        "name": "outbound-swaps-v2",
+        "key": "uint128",
+        "value": {
+          "tuple": [
+            { "name": "created-at", "type": "uint128" },
+            { "name": "output", "type": { "buffer": { "length": 128 } } },
+            { "name": "sats", "type": "uint128" },
+            { "name": "supplier", "type": "uint128" },
+            { "name": "swapper", "type": "principal" },
+            { "name": "xbtc", "type": "uint128" },
+          ],
+        },
+      } as TypedAbiMap<number | bigint, {
+        "createdAt": bigint;
+        "output": Uint8Array;
+        "sats": bigint;
+        "supplier": bigint;
+        "swapper": string;
         "xbtc": bigint;
       }>,
       supplierByController: {

@@ -1,6 +1,7 @@
 ;; (define-public (mined-txs))
 (define-map mined-txs (buff 32) bool)
 
+;; #[allow(unchecked_data)]
 (define-public (set-mined (txid (buff 32)))
   (ok (map-insert mined-txs txid true))
 )
@@ -11,6 +12,7 @@
 
 (define-map burn-block-headers uint (buff 80))
 
+;; #[allow(unchecked_data)]
 (define-public (set-burn-header (height uint) (header (buff 80)))
   (ok (map-insert burn-block-headers height header))
 )

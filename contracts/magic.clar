@@ -55,6 +55,14 @@
   hash: (buff 20),
   created-at: uint,
 })
+(define-map outbound-swaps-v2 uint {
+  swapper: principal,
+  sats: uint,
+  xbtc: uint,
+  supplier: uint,
+  output: (buff 128),
+  created-at: uint,
+})
 ;; mapping of swap -> txid
 (define-map completed-outbound-swaps uint (buff 32))
 (define-map completed-outbound-swap-txids (buff 32) uint)
@@ -617,6 +625,43 @@
   )
 )
 
+;; Initiate an outbound swap.
+;; Swapper provides the amount of xBTC and their withdraw address.
+;;
+;; @returns the auto-generated swap-id of this swap
+;;
+;; @param xbtc; amount of xBTC (sats) to swap
+;; @param btc-version; the address version for the swapper's BTC address
+;; @param btc-hash; the hash for the swapper's BTC address
+;; @param supplier-id; the supplier used for this swap
+(define-public (initiate-outbound-swap-v2 (xbtc uint) (output (buff 128)) (supplier-id uint))
+  (let
+    (
+      (supplier (unwrap! (map-get? supplier-by-id supplier-id) ERR_INVALID_SUPPLIER))
+      (fee-rate (unwrap! (get outbound-fee supplier) ERR_INVALID_SUPPLIER))
+      (sats (try! (get-swap-amount xbtc fee-rate (get outbound-base-fee supplier))))
+      (swap {
+        sats: sats,
+        xbtc: xbtc,
+        supplier: supplier-id,
+        output: output,
+        created-at: burn-block-height,
+        swapper: tx-sender,
+      })
+      (swap-id (var-get next-outbound-id))
+    )
+    ;; #[filter(xbtc)]
+    (try! (transfer xbtc tx-sender (as-contract tx-sender)))
+    (asserts! (map-insert outbound-swaps-v2 swap-id swap) ERR_PANIC)
+    (var-set next-outbound-id (+ swap-id u1))
+    (print (merge swap {
+      swap-id: swap-id,
+      topic: "initiate-outbound",
+    }))
+    (ok swap-id)
+  )
+)
+
 ;; Finalize an outbound swap.
 ;; This method is called by the supplier after they've sent the swapper BTC.
 ;;
@@ -643,7 +688,7 @@
     (
       (was-mined-bool (unwrap! (contract-call? .clarity-bitcoin was-tx-mined-prev? block prev-blocks tx proof) ERR_TX_NOT_MINED))
       (was-mined (asserts! was-mined-bool ERR_TX_NOT_MINED))
-      (swap (unwrap! (get-outbound-swap swap-id) ERR_SWAP_NOT_FOUND))
+      (swap (unwrap! (map-get? outbound-swaps swap-id) ERR_SWAP_NOT_FOUND))
       (expected-output (generate-output (get version swap) (get hash swap)))
       (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
       (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
@@ -656,6 +701,57 @@
     )
     (map-set supplier-funds supplier (+ funds-before xbtc))
     (asserts! (is-eq output-script expected-output) ERR_INVALID_OUTPUT)
+    (asserts! (map-insert completed-outbound-swaps swap-id txid) ERR_ALREADY_FINALIZED)
+    (asserts! (map-insert completed-outbound-swap-txids txid swap-id) ERR_TXID_USED)
+    (asserts! (>= output-sats (get sats swap)) ERR_INSUFFICIENT_AMOUNT)
+    (update-user-outbound-volume (get swapper swap) xbtc)
+    (print (merge swap {
+      topic: "finalize-outbound",
+      txid: txid,
+      swap-id: swap-id,
+    }))
+    (ok true)
+  )
+)
+
+;; Finalize an outbound swap.
+;; This method is called by the supplier after they've sent the swapper BTC.
+;;
+;; @returns true
+;;
+;; @param block; a tuple containing `header` (the Bitcoin block header) and the `height` (Stacks height)
+;; where the BTC tx was confirmed.
+;; @param prev-blocks; because Clarity contracts can't get Bitcoin headers when there is no Stacks block,
+;; this param allows users to specify the chain of block headers going back to the block where the
+;; BTC tx was confirmed.
+;; @param tx; the hex data of the BTC tx
+;; @param proof; a merkle proof to validate inclusion of this tx in the BTC block
+;; @param output-index; the index of the HTLC output in the BTC tx
+;; @param swap-id; the outbound swap ID they're finalizing
+(define-public (finalize-outbound-swap-v2
+    (block { header: (buff 80), height: uint })
+    (prev-blocks (list 10 (buff 80)))
+    (tx (buff 1024))
+    (proof { tx-index: uint, hashes: (list 12 (buff 32)), tree-depth: uint })
+    (output-index uint)
+    (swap-id uint)
+  )
+  (let
+    (
+      (was-mined-bool (unwrap! (contract-call? .clarity-bitcoin was-tx-mined-prev? block prev-blocks tx proof) ERR_TX_NOT_MINED))
+      (was-mined (asserts! was-mined-bool ERR_TX_NOT_MINED))
+      (swap (unwrap! (map-get? outbound-swaps-v2 swap-id) ERR_SWAP_NOT_FOUND))
+      (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
+      (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
+      (output-script (get scriptPubKey output))
+      (txid (contract-call? .clarity-bitcoin get-txid tx))
+      (output-sats (get value output))
+      (xbtc (get xbtc swap))
+      (supplier (get supplier swap))
+      (funds-before (get-funds supplier))
+    )
+    (map-set supplier-funds supplier (+ funds-before xbtc))
+    (asserts! (is-eq output-script (get output swap)) ERR_INVALID_OUTPUT)
     (asserts! (map-insert completed-outbound-swaps swap-id txid) ERR_ALREADY_FINALIZED)
     (asserts! (map-insert completed-outbound-swap-txids txid swap-id) ERR_TXID_USED)
     (asserts! (>= output-sats (get sats swap)) ERR_INSUFFICIENT_AMOUNT)
@@ -724,7 +820,7 @@
 )
 
 (define-read-only (get-outbound-swap (id uint))
-  (map-get? outbound-swaps id)
+  (map-get? outbound-swaps-v2 id)
 )
 
 (define-read-only (get-completed-outbound-swap-txid (id uint))

@@ -139,7 +139,7 @@ describe("magic tests", () => {
 
     it("can escrow with a valid transaction", () => {
       chain.txOk(
-        magic.escrowSwapV2({
+        magic.escrowSwap({
           block: {
             header: new Uint8Array([]),
             height: 1n,
@@ -195,7 +195,7 @@ describe("magic tests", () => {
 
     it("cannot re-use the same tx", () => {
       const receipt = chain.txErr(
-        magic.escrowSwapV2({
+        magic.escrowSwap({
           block: {
             header: new Uint8Array([]),
             height: 1n,
@@ -219,11 +219,11 @@ describe("magic tests", () => {
     });
 
     describe("finalizing", () => {
-      let receipt: TxReceiptOk<typeof magic["finalizeSwapV2"]>;
+      let receipt: TxReceiptOk<typeof magic["finalizeSwap"]>;
 
       it("can successfully finalize", () => {
         receipt = chain.txOk(
-          magic.finalizeSwapV2({
+          magic.finalizeSwap({
             preimage,
             txid: hex.decode(txid),
           }),

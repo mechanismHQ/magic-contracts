@@ -44,7 +44,7 @@ describe("outbound swap tests", () => {
 
     const xbtcAmount = 10000n;
 
-    let initReceipt: TxReceiptOk<typeof magic["initiateOutboundSwapV2"]>;
+    let initReceipt: TxReceiptOk<typeof magic["initiateOutboundSwap"]>;
     const swapId = 0n;
     const sats = getSwapAmount(xbtcAmount, feeOut, 100n);
 
@@ -66,7 +66,7 @@ describe("outbound swap tests", () => {
 
     it("outbound swap initiated", () => {
       initReceipt = chain.txOk(
-        magic.initiateOutboundSwapV2({
+        magic.initiateOutboundSwap({
           xbtc: xbtcAmount,
           supplierId: 0n,
           output: swapperBtc.script,
@@ -99,7 +99,7 @@ describe("outbound swap tests", () => {
     });
 
     describe("successfully finalizing outbound swap", () => {
-      // let finalizeReceipt: TxReceiptOk<typeof magic["finalizeOutboundSwapV2"]>;
+      // let finalizeReceipt: TxReceiptOk<typeof magic["finalizeOutboundSwap"]>;
 
       const btcTx = generateBaseTx(sats);
       btcTx.addOutput({
@@ -113,7 +113,7 @@ describe("outbound swap tests", () => {
       it("finalizes outbound swap", () => {
         chain.txOk(testUtils.setMined(txid), deployer);
         chain.txOk(
-          magic.finalizeOutboundSwapV2({
+          magic.finalizeOutboundSwap({
             ...mockTxArgs(btcTx),
             swapId,
           }),
@@ -157,7 +157,7 @@ describe("outbound swap tests", () => {
 
     it("swap is intiated", () => {
       const receipt = chain.txOk(
-        magic.initiateOutboundSwapV2({
+        magic.initiateOutboundSwap({
           ...mockTxArgs(btcTx),
           xbtc: xbtcAmount,
           output: swapperBtc.script,
@@ -224,7 +224,7 @@ describe("outbound swap tests", () => {
       it("cannot finalize after being revoked", () => {
         chain.txOk(testUtils.setMined(txid), deployer);
         const receipt = chain.txErr(
-          magic.finalizeOutboundSwapV2({
+          magic.finalizeOutboundSwap({
             ...mockTxArgs(btcTx),
             swapId,
           }),

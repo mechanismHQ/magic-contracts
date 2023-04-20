@@ -3081,8 +3081,8 @@ export const contracts = {
         [amount: TypedAbiArg<number | bigint, "amount">],
         Response<bigint, bigint>
       >,
-      escrowSwapV2: {
-        "name": "escrow-swap-v2",
+      escrowSwap: {
+        "name": "escrow-swap",
         "access": "public",
         "args": [
           {
@@ -3180,8 +3180,8 @@ export const contracts = {
           "senderPublicKey": Uint8Array;
         }, bigint>
       >,
-      finalizeOutboundSwapV2: {
-        "name": "finalize-outbound-swap-v2",
+      finalizeOutboundSwap: {
+        "name": "finalize-outbound-swap",
         "access": "public",
         "args": [
           {
@@ -3239,8 +3239,8 @@ export const contracts = {
         outputIndex: TypedAbiArg<number | bigint, "outputIndex">,
         swapId: TypedAbiArg<number | bigint, "swapId">,
       ], Response<boolean, bigint>>,
-      finalizeSwapV2: {
-        "name": "finalize-swap-v2",
+      finalizeSwap: {
+        "name": "finalize-swap",
         "access": "public",
         "args": [{ "name": "txid", "type": { "buffer": { "length": 32 } } }, {
           "name": "preimage",
@@ -3275,8 +3275,8 @@ export const contracts = {
           "xbtc": bigint;
         }, bigint>
       >,
-      initiateOutboundSwapV2: {
-        "name": "initiate-outbound-swap-v2",
+      initiateOutboundSwap: {
+        "name": "initiate-outbound-swap",
         "access": "public",
         "args": [{ "name": "xbtc", "type": "uint128" }, {
           "name": "output",
@@ -3341,7 +3341,7 @@ export const contracts = {
                   { "name": "expiration", "type": "uint128" },
                   { "name": "hash", "type": { "buffer": { "length": 32 } } },
                   { "name": "supplier", "type": "uint128" },
-                  { "name": "swapper", "type": "uint128" },
+                  { "name": "swapper", "type": "principal" },
                   { "name": "xbtc", "type": "uint128" },
                 ],
               },
@@ -3355,7 +3355,7 @@ export const contracts = {
           "expiration": bigint;
           "hash": Uint8Array;
           "supplier": bigint;
-          "swapper": bigint;
+          "swapper": string;
           "xbtc": bigint;
         }, bigint>
       >,
@@ -4047,25 +4047,6 @@ export const contracts = {
             { "name": "expiration", "type": "uint128" },
             { "name": "hash", "type": { "buffer": { "length": 32 } } },
             { "name": "supplier", "type": "uint128" },
-            { "name": "swapper", "type": "uint128" },
-            { "name": "xbtc", "type": "uint128" },
-          ],
-        },
-      } as TypedAbiMap<Uint8Array, {
-        "expiration": bigint;
-        "hash": Uint8Array;
-        "supplier": bigint;
-        "swapper": bigint;
-        "xbtc": bigint;
-      }>,
-      inboundSwapsV2: {
-        "name": "inbound-swaps-v2",
-        "key": { "buffer": { "length": 32 } },
-        "value": {
-          "tuple": [
-            { "name": "expiration", "type": "uint128" },
-            { "name": "hash", "type": { "buffer": { "length": 32 } } },
-            { "name": "supplier", "type": "uint128" },
             { "name": "swapper", "type": "principal" },
             { "name": "xbtc", "type": "uint128" },
           ],
@@ -4079,29 +4060,6 @@ export const contracts = {
       }>,
       outboundSwaps: {
         "name": "outbound-swaps",
-        "key": "uint128",
-        "value": {
-          "tuple": [
-            { "name": "created-at", "type": "uint128" },
-            { "name": "hash", "type": { "buffer": { "length": 20 } } },
-            { "name": "sats", "type": "uint128" },
-            { "name": "supplier", "type": "uint128" },
-            { "name": "swapper", "type": "principal" },
-            { "name": "version", "type": { "buffer": { "length": 1 } } },
-            { "name": "xbtc", "type": "uint128" },
-          ],
-        },
-      } as TypedAbiMap<number | bigint, {
-        "createdAt": bigint;
-        "hash": Uint8Array;
-        "sats": bigint;
-        "supplier": bigint;
-        "swapper": string;
-        "version": Uint8Array;
-        "xbtc": bigint;
-      }>,
-      outboundSwapsV2: {
-        "name": "outbound-swaps-v2",
         "key": "uint128",
         "value": {
           "tuple": [

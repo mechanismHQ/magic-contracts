@@ -19,15 +19,7 @@
 ;; supplier-id -> xBTC
 (define-map supplier-escrow uint uint)
 
-;; info for inbound swaps
 (define-map inbound-swaps (buff 32) {
-  swapper: uint,
-  xbtc: uint,
-  supplier: uint,
-  expiration: uint,
-  hash: (buff 32),
-})
-(define-map inbound-swaps-v2 (buff 32) {
   swapper: principal,
   xbtc: uint,
   supplier: uint,
@@ -47,15 +39,6 @@
 (define-map inbound-preimages (buff 32) (buff 128))
 
 (define-map outbound-swaps uint {
-  swapper: principal,
-  sats: uint,
-  xbtc: uint,
-  supplier: uint,
-  version: (buff 1),
-  hash: (buff 20),
-  created-at: uint,
-})
-(define-map outbound-swaps-v2 uint {
   swapper: principal,
   sats: uint,
   xbtc: uint,
@@ -287,7 +270,7 @@
 ;; @param swapper-buff; a 4-byte integer that indicates the `swapper-id`
 ;; @param supplier-id; the supplier used in this swap
 ;; @param min-to-receive; minimum receivable calculated off-chain to avoid the supplier front-run the swap by adjusting fees
-(define-public (escrow-swap-v2
+(define-public (escrow-swap
     (block { header: (buff 80), height: uint })
     (prev-blocks (list 10 (buff 80)))
     (tx (buff 1024))
@@ -344,7 +327,7 @@
     (asserts! (is-eq (get public-key supplier) recipient) ERR_INVALID_OUTPUT)
     (asserts! (is-eq output-script htlc-output) ERR_INVALID_OUTPUT)
     (asserts! (is-eq (len hash) u32) ERR_INVALID_HASH)
-    (asserts! (map-insert inbound-swaps-v2 txid escrow) ERR_TXID_USED)
+    (asserts! (map-insert inbound-swaps txid escrow) ERR_TXID_USED)
     (asserts! (map-insert inbound-meta txid meta) ERR_PANIC)
     (asserts! (>= xbtc min-to-receive) ERR_INCONSISTENT_FEES)
     (map-set supplier-funds supplier-id new-funds)
@@ -365,12 +348,12 @@
 ;;
 ;; @param txid; the txid of the BTC tx used for this inbound swap
 ;; @param preimage; the preimage that hashes to the swap's `hash`
-(define-public (finalize-swap-v2 (txid (buff 32)) (preimage (buff 128)))
+(define-public (finalize-swap (txid (buff 32)) (preimage (buff 128)))
   (match (map-get? inbound-preimages txid)
     existing ERR_ALREADY_FINALIZED
     (let
       (
-        (swap (unwrap! (map-get? inbound-swaps-v2 txid) ERR_INVALID_ESCROW))
+        (swap (unwrap! (map-get? inbound-swaps txid) ERR_INVALID_ESCROW))
         (stored-hash (get hash swap))
         (preimage-ok (asserts! (is-eq (sha256 preimage) stored-hash) ERR_INVALID_PREIMAGE))
         (supplier-id (get supplier swap))
@@ -442,7 +425,7 @@
 ;; @param btc-version; the address version for the swapper's BTC address
 ;; @param btc-hash; the hash for the swapper's BTC address
 ;; @param supplier-id; the supplier used for this swap
-(define-public (initiate-outbound-swap-v2 (xbtc uint) (output (buff 128)) (supplier-id uint))
+(define-public (initiate-outbound-swap (xbtc uint) (output (buff 128)) (supplier-id uint))
   (let
     (
       (supplier (unwrap! (map-get? supplier-by-id supplier-id) ERR_INVALID_SUPPLIER))
@@ -460,7 +443,7 @@
     )
     ;; #[filter(xbtc)]
     (try! (transfer xbtc tx-sender (as-contract tx-sender)))
-    (asserts! (map-insert outbound-swaps-v2 swap-id swap) ERR_PANIC)
+    (asserts! (map-insert outbound-swaps swap-id swap) ERR_PANIC)
     (var-set next-outbound-id (+ swap-id u1))
     (print (merge swap {
       swap-id: swap-id,
@@ -484,7 +467,7 @@
 ;; @param proof; a merkle proof to validate inclusion of this tx in the BTC block
 ;; @param output-index; the index of the HTLC output in the BTC tx
 ;; @param swap-id; the outbound swap ID they're finalizing
-(define-public (finalize-outbound-swap-v2
+(define-public (finalize-outbound-swap
     (block { header: (buff 80), height: uint })
     (prev-blocks (list 10 (buff 80)))
     (tx (buff 1024))
@@ -496,7 +479,7 @@
     (
       (was-mined-bool (unwrap! (contract-call? .clarity-bitcoin was-tx-mined-prev? block prev-blocks tx proof) ERR_TX_NOT_MINED))
       (was-mined (asserts! was-mined-bool ERR_TX_NOT_MINED))
-      (swap (unwrap! (map-get? outbound-swaps-v2 swap-id) ERR_SWAP_NOT_FOUND))
+      (swap (unwrap! (map-get? outbound-swaps swap-id) ERR_SWAP_NOT_FOUND))
       (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
       (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
       (output-script (get scriptPubKey output))
@@ -568,7 +551,7 @@
 )
 
 (define-read-only (get-inbound-swap (txid (buff 32)))
-  (map-get? inbound-swaps-v2 txid)
+  (map-get? inbound-swaps txid)
 )
 
 (define-read-only (get-preimage (txid (buff 32)))
@@ -576,7 +559,7 @@
 )
 
 (define-read-only (get-outbound-swap (id uint))
-  (map-get? outbound-swaps-v2 id)
+  (map-get? outbound-swaps id)
 )
 
 (define-read-only (get-completed-outbound-swap-txid (id uint))

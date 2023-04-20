@@ -90,18 +90,18 @@ Deno.test({
       hash: hash,
       metadata: sha256(metadata),
       recipientPublicKey: pub,
-      senderPublicKey: hexToBytes(fixture.sender),
+      senderPublicKey: pub,
     };
 
     const htlcScript = createHtlcScript(htlc);
     const inputTx = generateHtlcTx(htlc);
-    inputTx.finalize();
 
     const psbt = new btc.Transaction({ version: 1, allowUnknowInput: true });
 
     psbt.addInput({
-      txid: inputTx.hash,
+      txid: inputTx.id,
       nonWitnessUtxo: inputTx.hex,
+      sequence: Number(htlc.expiration),
       index: 0,
       redeemScript: htlcScript,
     });
@@ -117,20 +117,16 @@ Deno.test({
       amount: 900n,
     });
 
-    console.log(hex.encode(htlcScript));
-
-    // console.log(hex.encode(hash160(htlcScript)));
-
-    // psbt.finalizeIdx(0);
-
     psbt.signIdx(privKey, 0);
-    // console.log(hex.encode(pub));
 
     const input = psbt.getInput(0)!;
     const partial = input.partialSig!;
-    const finalized = btc.Script.encode([partial[0][1], "OP_0"]);
+    const finalized = btc.Script.encode([partial[0][1], "OP_0", htlcScript]);
     input.finalScriptSig = finalized;
-    // console.log(partial[0].map(hex.encode)[1]);
-    psbt.finalize();
+    psbt.updateInput(0, input);
+
+    // to validate signatures and finalScriptSig:
+    // const tx = psbt.extract();
+    // console.log(`\n\n btcdeb --tx=${hex.encode(tx)} --txin=${inputTx.hex}`);
   },
 });

@@ -156,7 +156,7 @@ export function generateHtlcTx(htlc: HTLC, _amount?: bigint) {
   const opts = { version: 1, allowLegacyWitnessUtxo: true };
   const tx = new btc.Transaction(opts);
   const pub = secp256k1.getPublicKey(privKey, true);
-  const amount = _amount ?? 10000n;
+  const amount = _amount ?? 50000n;
   tx.addInput({
     txid: hex.decode(
       "c061c23190ed3370ad5206769651eaf6fac6d87d85b5db34e30a74e0c4a6da3e"
@@ -164,7 +164,7 @@ export function generateHtlcTx(htlc: HTLC, _amount?: bigint) {
     index: 0,
     witnessUtxo: {
       amount: amount + 100n,
-      script: btc.p2pkh(pub).script,
+      script: btc.p2wpkh(pub).script,
     },
   });
   const out = btc.OutScript.encode({
@@ -178,7 +178,8 @@ export function generateHtlcTx(htlc: HTLC, _amount?: bigint) {
     amount: amount,
   });
 
-  tx.signIdx(privKey, 0);
+  tx.sign(privKey);
   tx.finalize();
+
   return tx;
 }

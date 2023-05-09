@@ -1,5 +1,5 @@
 import { describe, it, btc, hex, beforeAll, expect } from "../deps.ts";
-import { generateBaseTx, mockPrivateKey } from "../src/htlc.ts";
+import { generateBaseTx, mockPrivateKey } from "../deno/htlc.ts";
 import {
   deploy,
   magic,
@@ -44,7 +44,7 @@ describe("outbound swap tests", () => {
 
     const xbtcAmount = 10000n;
 
-    let initReceipt: TxReceiptOk<typeof magic["initiateOutboundSwap"]>;
+    let initReceipt: TxReceiptOk<(typeof magic)["initiateOutboundSwap"]>;
     const swapId = 0n;
     const sats = getSwapAmount(xbtcAmount, feeOut, 100n);
 

@@ -11,11 +11,10 @@ import {
 import {
   createHtlcScript,
   createLegacyHtlcScript,
-  encodeExpiration,
   encodeSwapperId,
   generateHtlcTx,
   generateLegacyHtlcTx,
-} from "../src/htlc.ts";
+} from "../deno/htlc.ts";
 import { randomBytes } from "../vendor/noble-hashes/utils.ts";
 
 const fixture = {
@@ -70,7 +69,7 @@ Deno.test("create htlc tx", () => {
     senderPublicKey: hexToBytes(fixture.sender),
   };
 
-  const tx = generateLegacyHtlcTx(htlc);
+  const _tx = generateLegacyHtlcTx(htlc);
 
   // console.log(tx.hex);
 });

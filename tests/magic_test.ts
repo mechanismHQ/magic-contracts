@@ -8,7 +8,7 @@ import {
   beforeAll,
   expect,
 } from "../deps.ts";
-import { createHtlcScript, generateHtlcTx, HTLC } from "../src/htlc.ts";
+import { createHtlcScript, generateHtlcTx, HTLC } from "../deno/htlc.ts";
 import {
   deploy,
   magic,
@@ -219,7 +219,7 @@ describe("magic tests", () => {
     });
 
     describe("finalizing", () => {
-      let receipt: TxReceiptOk<typeof magic["finalizeSwap"]>;
+      let receipt: TxReceiptOk<(typeof magic)["finalizeSwap"]>;
 
       it("can successfully finalize", () => {
         receipt = chain.txOk(

@@ -1,13 +1,15 @@
-import * as btc from "@scure/btc-signer";
-import { ripemd160 } from "@noble/hashes/ripemd160";
-import { sha256 } from "@noble/hashes/sha256";
-import { makeClarityHash } from "micro-stacks/connect";
+import * as btc from '@scure/btc-signer';
+import { ripemd160 } from '@noble/hashes/ripemd160';
+import { sha256 } from '@noble/hashes/sha256';
+import { makeClarityHash } from 'micro-stacks/connect';
 import {
   contractPrincipalCV,
+  intCV,
   standardPrincipalCV,
   tupleCV,
   uintCV,
-} from "micro-stacks/clarity";
+} from 'micro-stacks/clarity';
+import { IntegerType } from 'micro-stacks/common';
 
 export const CSV_DELAY = 500n;
 export const CSV_DELAY_BUFF = btc.CompactSize.encode(CSV_DELAY);
@@ -21,9 +23,7 @@ export interface HTLC {
 }
 
 export function encodeExpiration(expiration?: bigint): Uint8Array {
-  return typeof expiration === "undefined"
-    ? CSV_DELAY_BUFF
-    : btc.CompactSize.encode(expiration);
+  return typeof expiration === 'undefined' ? CSV_DELAY_BUFF : btc.CompactSize.encode(expiration);
 }
 
 /**
@@ -47,25 +47,25 @@ export function encodeExpiration(expiration?: bigint): Uint8Array {
 export function createHtlcScript(htlc: HTLC) {
   return btc.Script.encode([
     htlc.metadata,
-    "DROP",
-    "IF",
-    "SHA256",
+    'DROP',
+    'IF',
+    'SHA256',
     htlc.hash,
-    "EQUALVERIFY",
+    'EQUALVERIFY',
     htlc.recipientPublicKey,
-    "ELSE",
+    'ELSE',
     encodeExpiration(htlc.expiration),
-    "CHECKSEQUENCEVERIFY",
-    "DROP",
+    'CHECKSEQUENCEVERIFY',
+    'DROP',
     htlc.senderPublicKey,
-    "ENDIF",
-    "CHECKSIG",
+    'ENDIF',
+    'CHECKSIG',
   ]);
 }
 
 export function encodeHtlcOutput(redeemScript: Uint8Array) {
   return btc.OutScript.encode({
-    type: "sh",
+    type: 'sh',
     hash: hash160(redeemScript),
   });
 }
@@ -76,17 +76,20 @@ export function hash160(data: Uint8Array) {
 
 export function generateMetadataHash({
   swapperAddress,
-  minAmount,
+  baseFee,
+  feeRate,
 }: {
   swapperAddress: string;
-  minAmount: bigint | number;
+  baseFee: IntegerType;
+  feeRate: IntegerType;
 }) {
-  const addressCV = swapperAddress.includes(".")
+  const addressCV = swapperAddress.includes('.')
     ? contractPrincipalCV(swapperAddress)
     : standardPrincipalCV(swapperAddress);
   const cv = tupleCV({
     swapper: addressCV,
-    "min-amount": uintCV(minAmount),
+    'fee-rate': intCV(feeRate),
+    'base-fee': intCV(baseFee),
   });
   return makeClarityHash(cv);
 }

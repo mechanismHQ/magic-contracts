@@ -270,6 +270,8 @@
 ;; @param swapper-buff; a 4-byte integer that indicates the `swapper-id`
 ;; @param supplier-id; the supplier used in this swap
 ;; @param min-to-receive; minimum receivable calculated off-chain to avoid the supplier front-run the swap by adjusting fees
+;; @param max-base-fee; the maximum base fee that the supplier can charge
+;; @param max-fee-rate; the maximum fee rate that the supplier can charge
 (define-public (escrow-swap
     (block { header: (buff 80), height: uint })
     (prev-blocks (list 10 (buff 80)))
@@ -282,14 +284,15 @@
     (hash (buff 32))
     (swapper principal)
     (supplier-id uint)
-    (min-to-receive uint)
+    (max-base-fee int)
+    (max-fee-rate int)
   )
   (let
     (
       (was-mined-bool (unwrap! (contract-call? .clarity-bitcoin was-tx-mined-prev? block prev-blocks tx proof) ERR_TX_NOT_MINED))
       (was-mined (asserts! was-mined-bool ERR_TX_NOT_MINED))
       (mined-height (get height block))
-      (metadata (hash-metadata swapper min-to-receive))
+      (metadata (hash-metadata swapper max-base-fee max-fee-rate))
       (htlc-redeem (generate-htlc-script-v2 sender recipient expiration-buff hash metadata))
       (htlc-output (generate-script-hash htlc-redeem))
       (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
@@ -298,7 +301,8 @@
       (supplier (unwrap! (map-get? supplier-by-id supplier-id) ERR_INVALID_SUPPLIER))
       (sats (get value output))
       (fee-rate (unwrap! (get inbound-fee supplier) ERR_INVALID_SUPPLIER))
-      (xbtc (try! (get-swap-amount sats fee-rate (get inbound-base-fee supplier))))
+      (base-fee (get inbound-base-fee supplier))
+      (xbtc (try! (get-swap-amount sats fee-rate base-fee)))
       (funds (get-funds supplier-id))
       (funds-ok (asserts! (>= funds xbtc) ERR_INSUFFICIENT_FUNDS))
       (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
@@ -329,7 +333,8 @@
     (asserts! (is-eq (len hash) u32) ERR_INVALID_HASH)
     (asserts! (map-insert inbound-swaps txid escrow) ERR_TXID_USED)
     (asserts! (map-insert inbound-meta txid meta) ERR_PANIC)
-    (asserts! (>= xbtc min-to-receive) ERR_INCONSISTENT_FEES)
+    (asserts! (<= base-fee max-base-fee) ERR_INCONSISTENT_FEES)
+    (asserts! (<= fee-rate max-fee-rate) ERR_INCONSISTENT_FEES)
     (map-set supplier-funds supplier-id new-funds)
     (map-set supplier-escrow supplier-id new-escrow)
     (print (merge (merge escrow meta) { 
@@ -636,15 +641,21 @@
   )
 )
 
-(define-read-only (serialize-metadata (swapper principal) (min-amount uint))
+(define-read-only (serialize-metadata (swapper principal) (base-fee int) (fee-rate int))
   (unwrap-panic (to-consensus-buff? {
     swapper: swapper,
-    min-amount: min-amount
+    base-fee: base-fee,
+    fee-rate: fee-rate,
   }))
 )
 
-(define-read-only (hash-metadata (swapper principal) (min-amount uint))
-  (sha256 (serialize-metadata swapper min-amount))
+;; Generate a metadata hash, which is embedded in an inbound HTLC.
+;; 
+;; @param swapper; the STX address of the recipient of the swap
+;; @param base-fee; the maximum base fee that can be charged by the supplier
+;; @param fee-rate; the maximum fee rate that can be charged by the supplier
+(define-read-only (hash-metadata (swapper principal) (base-fee int) (fee-rate int))
+  (sha256 (serialize-metadata swapper base-fee fee-rate))
 )
 
 (define-read-only (get-swap-amount (amount uint) (fee-rate int) (base-fee int))

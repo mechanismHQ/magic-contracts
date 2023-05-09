@@ -3251,7 +3251,8 @@ export const contracts = {
           { name: 'hash', type: { buffer: { length: 32 } } },
           { name: 'swapper', type: 'principal' },
           { name: 'supplier-id', type: 'uint128' },
-          { name: 'min-to-receive', type: 'uint128' },
+          { name: 'max-base-fee', type: 'int128' },
+          { name: 'max-fee-rate', type: 'int128' },
         ],
         outputs: {
           type: {
@@ -3295,7 +3296,8 @@ export const contracts = {
           hash: TypedAbiArg<Uint8Array, 'hash'>,
           swapper: TypedAbiArg<string, 'swapper'>,
           supplierId: TypedAbiArg<number | bigint, 'supplierId'>,
-          minToReceive: TypedAbiArg<number | bigint, 'minToReceive'>
+          maxBaseFee: TypedAbiArg<number | bigint, 'maxBaseFee'>,
+          maxFeeRate: TypedAbiArg<number | bigint, 'maxFeeRate'>
         ],
         Response<
           {
@@ -3951,13 +3953,15 @@ export const contracts = {
         access: 'read_only',
         args: [
           { name: 'swapper', type: 'principal' },
-          { name: 'min-amount', type: 'uint128' },
+          { name: 'base-fee', type: 'int128' },
+          { name: 'fee-rate', type: 'int128' },
         ],
         outputs: { type: { buffer: { length: 32 } } },
       } as TypedAbiFunction<
         [
           swapper: TypedAbiArg<string, 'swapper'>,
-          minAmount: TypedAbiArg<number | bigint, 'minAmount'>
+          baseFee: TypedAbiArg<number | bigint, 'baseFee'>,
+          feeRate: TypedAbiArg<number | bigint, 'feeRate'>
         ],
         Uint8Array
       >,
@@ -3972,13 +3976,15 @@ export const contracts = {
         access: 'read_only',
         args: [
           { name: 'swapper', type: 'principal' },
-          { name: 'min-amount', type: 'uint128' },
+          { name: 'base-fee', type: 'int128' },
+          { name: 'fee-rate', type: 'int128' },
         ],
-        outputs: { type: { buffer: { length: 192 } } },
+        outputs: { type: { buffer: { length: 216 } } },
       } as TypedAbiFunction<
         [
           swapper: TypedAbiArg<string, 'swapper'>,
-          minAmount: TypedAbiArg<number | bigint, 'minAmount'>
+          baseFee: TypedAbiArg<number | bigint, 'baseFee'>,
+          feeRate: TypedAbiArg<number | bigint, 'feeRate'>
         ],
         Uint8Array
       >,

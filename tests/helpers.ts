@@ -7,16 +7,16 @@ import {
   ContractCallTyped,
   btc,
   randomBytes,
-} from "../deps.ts";
-import { accounts, simnet } from "./clarigen-types.ts";
-import { contracts } from "./clarigen.ts";
-import { publicKeys } from "./mocks.ts";
+} from '../deps.ts';
+import { accounts, simnet } from './clarigen-types.ts';
+import { contracts } from './clarigen.ts';
+import { publicKeys } from './mocks.ts';
 
 export const magic = contracts.magic;
 export const xbtcContract = contracts.wrappedBitcoin;
 export const testUtils = contracts.testUtils;
 
-export const [xbtcDeployer] = xbtcContract.identifier.split(".");
+export const [xbtcDeployer] = xbtcContract.identifier.split('.');
 
 export const xbtcAsset = `${xbtcContract.identifier}::wrapped-bitcoin`;
 
@@ -51,15 +51,12 @@ export type TxReceiptOk<T> = T extends (...args: any) => any
     : never
   : never;
 
-export function hashMetadata(
-  chain: Chain,
-  minAmount: bigint,
-  recipient: string
-) {
+export function hashMetadata(chain: Chain, feeRate: bigint, baseFee: bigint, recipient: string) {
   return chain.rov(
     magic.hashMetadata({
       swapper: recipient,
-      minAmount,
+      baseFee,
+      feeRate,
     })
   );
 }
@@ -67,15 +64,11 @@ export function hashMetadata(
 export function deploy() {
   const { chain, accounts } = Chain.fromSimnet(simnet);
 
-  const [deployer, supplier, swapper] = accounts.addresses(
-    "deployer",
-    "wallet_1",
-    "wallet_2"
-  );
+  const [deployer, supplier, swapper] = accounts.addresses('deployer', 'wallet_1', 'wallet_2');
 
   afterAll(() => {
     // deno-lint-ignore no-explicit-any
-    (Deno as any).core.opSync("api/v1/terminate_session", {
+    (Deno as any).core.opSync('api/v1/terminate_session', {
       sessionId: chain.sessionId,
     });
   });
@@ -90,15 +83,9 @@ export function deploy() {
 }
 
 export function initXbtc(chain: Chain) {
-  chain.txOk(
-    xbtcContract.initialize("xbtc", "xbtc", 8, xbtcDeployer),
-    xbtcDeployer
-  );
+  chain.txOk(xbtcContract.initialize('xbtc', 'xbtc', 8, xbtcDeployer), xbtcDeployer);
   chain.txOk(xbtcContract.addPrincipalToRole(1, xbtcDeployer), xbtcDeployer);
-  chain.txOk(
-    xbtcContract.mintTokens(100000000000000, accounts.wallet_1.address),
-    xbtcDeployer
-  );
+  chain.txOk(xbtcContract.mintTokens(100000000000000, accounts.wallet_1.address), xbtcDeployer);
 }
 
 export function mockTxArgs(tx: btc.Transaction) {

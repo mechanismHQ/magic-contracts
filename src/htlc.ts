@@ -65,8 +65,8 @@ export function createHtlcScript(htlc: HTLC) {
 
 export function encodeHtlcOutput(redeemScript: Uint8Array) {
   return btc.OutScript.encode({
-    type: 'sh',
-    hash: hash160(redeemScript),
+    type: 'wsh',
+    hash: sha256(redeemScript),
   });
 }
 

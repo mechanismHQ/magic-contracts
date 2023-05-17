@@ -3632,6 +3632,12 @@ export const contracts = {
         args: [{ name: 'script', type: { buffer: { length: 148 } } }],
         outputs: { type: { buffer: { length: 23 } } },
       } as TypedAbiFunction<[script: TypedAbiArg<Uint8Array, 'script'>], Uint8Array>,
+      generateWshOutput: {
+        name: 'generate-wsh-output',
+        access: 'read_only',
+        args: [{ name: 'script', type: { buffer: { length: 148 } } }],
+        outputs: { type: { buffer: { length: 34 } } },
+      } as TypedAbiFunction<[script: TypedAbiArg<Uint8Array, 'script'>], Uint8Array>,
       getAmountWithFeeRate: {
         name: 'get-amount-with-fee-rate',
         access: 'read_only',

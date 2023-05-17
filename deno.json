@@ -2,6 +2,9 @@
   "lint": {
     "files": {
       "exclude": ["vendor/"]
+    },
+    "rules": {
+      "exclude": ["no-unused-vars"]
     }
   }
 }

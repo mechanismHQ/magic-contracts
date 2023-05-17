@@ -294,7 +294,7 @@
       (mined-height (get height block))
       (metadata (hash-metadata swapper max-base-fee max-fee-rate))
       (htlc-redeem (generate-htlc-script-v2 sender recipient expiration-buff hash metadata))
-      (htlc-output (generate-script-hash htlc-redeem))
+      (htlc-output (generate-wsh-output htlc-redeem))
       (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
       (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
       (output-script (get scriptPubKey output))
@@ -793,8 +793,8 @@
   ))))))))))
 )
 
-(define-read-only (generate-script-hash (script (buff 148)))
-  (concat (concat 0xa914 (hash160 script)) 0x87)
+(define-read-only (generate-wsh-output (script (buff 148)))
+  (concat 0x0020 (sha256 script))
 )
 
 (define-read-only (bytes-len (bytes (buff 4)))

@@ -24,6 +24,7 @@ import {
 import { randomBytes } from '../vendor/noble-hashes/utils.ts';
 import { deploy } from './helpers.ts';
 import { magic } from './clarigen.ts';
+import { isBytes } from '../vendor/micro-packed.ts';
 
 const fixture = {
   script:
@@ -104,10 +105,8 @@ describe('HTLC tests', () => {
         amount: 1000n,
       },
       witnessScript: htlcScript,
-      // nonWitnessUtxo: inputTx.hex,
       sequence: Number(htlc.expiration),
       index: 0,
-      // redeemScript: htlcScript,
     });
 
     psbt.addOutput({
@@ -120,8 +119,22 @@ describe('HTLC tests', () => {
 
     const input = psbt.getInput(0)!;
     const partial = input.partialSig!;
-    const finalized = btc.Script.encode([partial[0][1], 'OP_0', htlcScript]);
-    input.finalScriptSig = finalized;
+    const finalized = btc.Script.encode([
+      partial[0][1],
+      'OP_0',
+      // for preimage:
+      // preimage,
+      // 'OP_1',
+      htlcScript,
+    ]);
+    const witness = btc.Script.decode(finalized).map(i => {
+      if (i === 0) return new Uint8Array();
+      if (i === 1) return new Uint8Array([1]);
+      if (isBytes(i)) return i;
+      // return btc.Script.encode([i]);
+      throw new Error(`Wrong witness op=${i}`);
+    });
+    input.finalScriptWitness = witness;
     psbt.updateInput(0, input);
 
     // to validate signatures and finalScriptSig:

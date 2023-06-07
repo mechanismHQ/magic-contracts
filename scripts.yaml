@@ -8,7 +8,8 @@ scripts:
     cmd: clarinet integrate -d
 
   electrum_server:
-    cmd: docker run -it -p 50001:50001 -e COIN=\"Bitcoin\" -e NET=\"regtest\" -e DAEMON_URL=\"http://devnet:devnet@host.docker.internal:18443\" lukechilds/electrumx
+    # cmd: docker run -it -p 50001:50001 -e COIN="Bitcoin" -e NET="regtest" -e DAEMON_URL="http://devnet:devnet@host.docker.internal:18443" lukechilds/electrumx
+    cmd: pnpm electrum_server
 
   electrum:
     cmd: electrum --regtest
@@ -18,3 +19,6 @@ scripts:
   
   stop:
     cmd: pnpm pm2 stop ecosystem.config.cjs
+
+  setup_xbtc:
+    cmd: clarinet deployments apply -p deployments/xbtc.devnet-plan.yaml

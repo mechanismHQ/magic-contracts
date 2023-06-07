@@ -1,16 +1,14 @@
-import { Address, OutScript, NETWORK } from "@scure/btc-signer";
-export { NETWORK, TEST_NETWORK } from "@scure/btc-signer";
-import { equalBytes as _equalBytes } from "micro-packed";
+import { Address, OutScript } from '@scure/btc-signer';
+import { equalBytes as _equalBytes } from 'micro-packed';
+import type { BtcNetwork } from './networks';
 
-export type BTCNetwork = typeof NETWORK;
-
-export function outputToAddress(output: Uint8Array, network = NETWORK) {
+export function outputToAddress(output: Uint8Array, network: BtcNetwork) {
   const outScript = OutScript.decode(output);
   const address = Address(network).encode(outScript);
   return address;
 }
 
-export function addressToOutput(address: string, network = NETWORK) {
+export function addressToOutput(address: string, network: BtcNetwork) {
   const outScript = Address(network).decode(address);
   return OutScript.encode(outScript);
 }

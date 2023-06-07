@@ -181,7 +181,7 @@ export function generateHtlcTx(htlc: HTLC, _amount?: bigint) {
   const out = generateWshOutput(htlcScript);
 
   tx.addOutput({
-    redeemScript: htlcScript,
+    // redeemScript: htlcScript,
     script: out,
     amount: amount,
   });

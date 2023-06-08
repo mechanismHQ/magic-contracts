@@ -742,17 +742,6 @@
   )
 )
 
-(define-read-only (validate-btc-addr (version (buff 1)) (hash (buff 20)))
-  (let
-    (
-      (valid-hash (is-eq (len hash) u20))
-      (valid-version (or (is-eq version P2PKH_VERSION) (is-eq version P2SH_VERSION)))
-    )
-    (asserts! (and valid-hash valid-version) ERR_INVALID_BTC_ADDR)
-    (ok true)
-  )
-)
-
 ;; lookup an outbound swap and validate that it is revocable.
 ;; to be revoked, it must be expired and not finalized
 (define-read-only (validate-outbound-revocable (swap-id uint))
@@ -823,22 +812,5 @@
     )
   )
 )
-
-(define-read-only (test-serialize-uint (num uint))
-  (let
-    (
-      (serialized (unwrap-panic (to-consensus-buff? num)))
-
-    )
-    {
-      buff: serialized,
-      unwrapped: (buff-to-uint-be (unwrap-panic (as-max-len?
-        (unwrap-panic (slice? serialized u1 u17))
-        u16
-      )))
-    }
-  )
-)
-
 
 (define-constant BUFF_TO_BYTE (list 0x00 0x01 0x02 0x03 0x04))

@@ -3,6 +3,7 @@ scripts:
     cmd:
       - clarinet test --coverage
       - genhtml -o coverage/html coverage.lcov
+      - echo "Coverage generated at ./coverage/html/index.html"
 
   integrate:
     cmd: clarinet integrate -d

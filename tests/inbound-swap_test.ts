@@ -31,7 +31,7 @@ import { getSwapAmount } from "./utils.ts";
 import { publicKey, publicKeys } from "./mocks.ts";
 import { clarityBitcoin } from "./clarigen.ts";
 
-describe("magic tests", () => {
+describe("inbound swap tests", () => {
   const { chain, accounts } = deploy();
   initXbtcAndSupplier(chain);
   const [deployer, supplier, swapper] = accounts.addresses(
@@ -120,6 +120,10 @@ describe("magic tests", () => {
       expect(escrow).toEqual(supplierEscrowBefore + escrow);
       expect(supplierEscrowBefore).toEqual(0n);
       expect(escrow).toEqual(xbtc);
+
+      const fullSupplier = chain.rovOk(magic.getFullSupplier(0n));
+      expect(fullSupplier.funds).toEqual(funds);
+      expect(fullSupplier.escrow).toEqual(escrow);
     });
 
     it("volume not yet updated", () => {
@@ -195,6 +199,14 @@ describe("magic tests", () => {
       it("swapper has xbtc", () => {
         const balance = chain.rovOk(xbtcContract.getBalance(swapper));
         expect(balance).toEqual(swapperBalanceBefore + xbtc);
+      });
+
+      it('cannot be re-finalized', () => {
+        const receipt = chain.txErr(
+          magic.finalizeSwap(hex.decode(txid), preimage),
+          swapper,
+        );
+        expect(receipt.value).toEqual(magic.constants.ERR_ALREADY_FINALIZED.value);
       });
     });
   });
@@ -366,14 +378,14 @@ describe("magic tests", () => {
     });
 
     it("validates htlc expiration isnt too far", () => {
-      const htlc = {
-        senderPublicKey: publicKeys[1],
-        // invalid supplier key:
-        recipientPublicKey: publicKeys[2],
-        hash,
-        swapper: 0n,
-        metadata,
-      };
+      // const htlc = {
+      //   senderPublicKey: publicKeys[1],
+      //   // invalid supplier key:
+      //   recipientPublicKey: publicKeys[2],
+      //   hash,
+      //   swapper: 0n,
+      //   metadata,
+      // };
       const tx = generateHtlcTx({
         ...htlc,
         expiration: 551n,
@@ -395,6 +407,40 @@ describe("magic tests", () => {
           swapper,
           sender: swapperKey,
           expirationBuff: btc.CompactSize.encode(551n),
+          proof,
+          hash,
+          supplierId: 0n,
+        }),
+        swapper,
+      );
+      expect(receipt.value).toEqual(
+        magic.constants.ERR_INVALID_EXPIRATION.value,
+      );
+    });
+
+    it('validates that htlc expiration isnt too soon', () => {
+      const min = magic.constants.MIN_EXPIRATION;
+      const tx = generateHtlcTx({
+        ...htlc,
+        expiration: min - 1n,
+      }, sats);
+      chain.txOk(testUtils.setMined(hex.decode(tx.id)), deployer);
+
+      const receipt = chain.txErr(
+        magic.escrowSwap({
+          block: {
+            header: new Uint8Array([]),
+            height: 1n,
+          },
+          prevBlocks: [],
+          tx: tx.toBytes(true),
+          outputIndex: 0,
+          recipient: supplierKey,
+          maxBaseFee: 100n,
+          maxFeeRate: feeIn,
+          swapper,
+          sender: swapperKey,
+          expirationBuff: btc.CompactSize.encode(min - 1n),
           proof,
           hash,
           supplierId: 0n,

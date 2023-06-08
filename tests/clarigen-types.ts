@@ -3908,39 +3908,6 @@ export const contracts = {
         ],
         Uint8Array
       >,
-      testSerializeUint: {
-        "name": "test-serialize-uint",
-        "access": "read_only",
-        "args": [{ "name": "num", "type": "uint128" }],
-        "outputs": {
-          "type": {
-            "tuple": [{
-              "name": "buff",
-              "type": { "buffer": { "length": 17 } },
-            }, { "name": "unwrapped", "type": "uint128" }],
-          },
-        },
-      } as TypedAbiFunction<[num: TypedAbiArg<number | bigint, "num">], {
-        "buff": Uint8Array;
-        "unwrapped": bigint;
-      }>,
-      validateBtcAddr: {
-        "name": "validate-btc-addr",
-        "access": "read_only",
-        "args": [{ "name": "version", "type": { "buffer": { "length": 1 } } }, {
-          "name": "hash",
-          "type": { "buffer": { "length": 20 } },
-        }],
-        "outputs": {
-          "type": { "response": { "ok": "bool", "error": "uint128" } },
-        },
-      } as TypedAbiFunction<
-        [
-          version: TypedAbiArg<Uint8Array, "version">,
-          hash: TypedAbiArg<Uint8Array, "hash">,
-        ],
-        Response<boolean, bigint>
-      >,
       validateExpiration: {
         "name": "validate-expiration",
         "access": "read_only",

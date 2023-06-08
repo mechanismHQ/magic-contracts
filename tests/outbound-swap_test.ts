@@ -121,6 +121,11 @@ describe("outbound swap tests", () => {
         const funds = chain.rov(magic.getFunds(0n));
         expect(funds).toEqual(startingFunds + xbtcAmount);
       });
+
+      it('volume state is updated', () => {
+        const userVol = chain.rov(magic.getUserOutboundVolume(swapper));
+        expect(userVol).toEqual(xbtcAmount);
+      });
     });
   });
 
@@ -223,5 +228,10 @@ describe("outbound swap tests", () => {
         );
       });
     });
+  });
+
+  it('next swap id is correct', () => {
+    const nextId = chain.rov(magic.getNextOutboundId());
+    expect(nextId).toEqual(2n);
   });
 });

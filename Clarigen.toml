@@ -26,3 +26,11 @@ after = "pnpm prettier -w src/clarigen-types.ts"
 [docs]
 # `output` should be a folder
 output = "docs"
+exclude = [
+  "clarity-bitcoin",
+  "ft-trait",
+  "Wrapped-Bitcoin",
+  "restricted-token-trait",
+  "test-utils",
+  "clarity-bitcoin-v2"
+]

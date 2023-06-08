@@ -12,10 +12,10 @@ path = 'contracts/_v1-clarity-bitcoin.clar'
 clarity_version = 2
 epoch = 2.1
 
-[contracts.clarity-bitcoin-v2]
-path = 'contracts/clarity-bitcoin-v2.clar'
-clarity_version = 2
-epoch = 2.1
+# [contracts.clarity-bitcoin-v2]
+# path = 'contracts/clarity-bitcoin-v2.clar'
+# clarity_version = 2
+# epoch = 2.1
 
 [contracts.test-utils]
 path = 'contracts/test/test-utils.clar'
@@ -26,6 +26,7 @@ epoch = 2.1
 path = 'contracts/magic.clar'
 clarity_version = 2
 epoch = 2.1
+
 [repl.analysis]
 passes = ['check_checker']
 

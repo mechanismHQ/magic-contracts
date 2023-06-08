@@ -267,9 +267,8 @@
 ;; @param recipient; The supplier's public key used in the HTLC
 ;; @param expiration-buff; A 4-byte integer the indicated the expiration of the HTLC
 ;; @param hash; a hash of the `preimage` used in this swap
-;; @param swapper-buff; a 4-byte integer that indicates the `swapper-id`
+;; @param swapper; the STX address receiving xBTC from this swap
 ;; @param supplier-id; the supplier used in this swap
-;; @param min-to-receive; minimum receivable calculated off-chain to avoid the supplier front-run the swap by adjusting fees
 ;; @param max-base-fee; the maximum base fee that the supplier can charge
 ;; @param max-fee-rate; the maximum fee rate that the supplier can charge
 (define-public (escrow-swap
@@ -427,8 +426,7 @@
 ;; @returns the auto-generated swap-id of this swap
 ;;
 ;; @param xbtc; amount of xBTC (sats) to swap
-;; @param btc-version; the address version for the swapper's BTC address
-;; @param btc-hash; the hash for the swapper's BTC address
+;; @param output; the output script for the swapper's BTC address
 ;; @param supplier-id; the supplier used for this swap
 (define-public (initiate-outbound-swap (xbtc uint) (output (buff 128)) (supplier-id uint))
   (let

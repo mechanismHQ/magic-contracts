@@ -1,0 +1,3 @@
+# Contracts
+
+- [`magic`](magic.md)

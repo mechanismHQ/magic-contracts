@@ -9,7 +9,8 @@
   },
   "fmt": {
     "files": {
-      "exclude": ["vendor/"]
+      "exclude": ["vendor/"],
+      "include": ["tests/"]
     }
   }
 }

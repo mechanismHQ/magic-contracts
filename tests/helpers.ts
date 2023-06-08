@@ -7,6 +7,7 @@ import {
   ContractCallTyped,
   btc,
   randomBytes,
+  beforeAll,
 } from '../deps.ts';
 import { accounts, simnet } from './clarigen-types.ts';
 import { contracts } from './clarigen.ts';
@@ -82,6 +83,23 @@ export function deploy() {
   };
 }
 
+export function initXbtcAndSupplier(chain: Chain) {
+  beforeAll(() => {
+    initXbtc(chain);
+    chain.txOk(
+      magic.registerSupplier({
+        publicKey: supplierKey,
+        inboundFee: feeIn,
+        outboundFee: feeOut,
+        inboundBaseFee: 100n,
+        outboundBaseFee: 100n,
+        funds: startingFunds,
+      }),
+      supplier
+    );
+  })
+}
+
 export function initXbtc(chain: Chain) {
   chain.txOk(xbtcContract.initialize('xbtc', 'xbtc', 8, xbtcDeployer), xbtcDeployer);
   chain.txOk(xbtcContract.addPrincipalToRole(1, xbtcDeployer), xbtcDeployer);
@@ -99,4 +117,12 @@ export function mockTxArgs(tx: btc.Transaction) {
     proof,
     outputIndex: 0n,
   };
+}
+
+export function setMined(chain: Chain, txid: Uint8Array, mined = true) {
+  if (mined) {
+    chain.txOk(testUtils.setMined(txid), deployer);
+  } else {
+    chain.txOk(testUtils.setNotMined(txid), deployer);
+  }
 }

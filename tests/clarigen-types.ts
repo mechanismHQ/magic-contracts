@@ -3506,15 +3506,6 @@ export const contracts = {
         ],
         Uint8Array
       >,
-      generateScriptHash: {
-        "name": "generate-script-hash",
-        "access": "read_only",
-        "args": [{ "name": "script", "type": { "buffer": { "length": 148 } } }],
-        "outputs": { "type": { "buffer": { "length": 23 } } },
-      } as TypedAbiFunction<
-        [script: TypedAbiArg<Uint8Array, "script">],
-        Uint8Array
-      >,
       generateWshOutput: {
         "name": "generate-wsh-output",
         "access": "read_only",
@@ -4731,6 +4722,17 @@ export const contracts = {
       >,
       setMined: {
         "name": "set-mined",
+        "access": "public",
+        "args": [{ "name": "txid", "type": { "buffer": { "length": 32 } } }],
+        "outputs": {
+          "type": { "response": { "ok": "bool", "error": "none" } },
+        },
+      } as TypedAbiFunction<
+        [txid: TypedAbiArg<Uint8Array, "txid">],
+        Response<boolean, null>
+      >,
+      setNotMined: {
+        "name": "set-not-mined",
         "access": "public",
         "args": [{ "name": "txid", "type": { "buffer": { "length": 32 } } }],
         "outputs": {

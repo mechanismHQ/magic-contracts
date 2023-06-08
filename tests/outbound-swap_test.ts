@@ -17,26 +17,14 @@ import {
   initXbtc,
   TxReceiptOk,
   mockTxArgs,
+initXbtcAndSupplier,
 } from "./helpers.ts";
 import { getSwapAmount } from "./utils.ts";
 
 describe("outbound swap tests", () => {
   const { chain } = deploy();
 
-  beforeAll(() => {
-    initXbtc(chain);
-    chain.txOk(
-      magic.registerSupplier({
-        publicKey: supplierKey,
-        inboundFee: feeIn,
-        outboundFee: feeOut,
-        inboundBaseFee: 100n,
-        outboundBaseFee: 100n,
-        funds: startingFunds,
-      }),
-      supplier
-    );
-  });
+  initXbtcAndSupplier(chain);
 
   describe("successful outbound swap", () => {
     const swapperBalanceStart = 1000000n;

@@ -74,7 +74,6 @@
 ;; placeholder to mark inbound swap as revoked
 (define-constant REVOKED_INBOUND_PREIMAGE 0x00)
 
-(define-constant ERR_PANIC (err u1)) ;; should never be thrown
 (define-constant ERR_SUPPLIER_EXISTS (err u2))
 (define-constant ERR_UNAUTHORIZED (err u3))
 (define-constant ERR_ADD_FUNDS (err u4))
@@ -137,9 +136,9 @@
         inbound-base-fee: inbound-base-fee,
       })
     )
-    (asserts! (map-insert supplier-by-id id supplier) ERR_PANIC)
-    (asserts! (map-insert supplier-funds id u0) ERR_PANIC)
-    (asserts! (map-insert supplier-escrow id u0) ERR_PANIC)
+    (map-insert supplier-by-id id supplier)
+    (map-insert supplier-funds id u0)
+    (map-insert supplier-escrow id u0)
     (try! (validate-fee inbound-fee))
     (try! (validate-fee outbound-fee))
 
@@ -209,7 +208,7 @@
   (let
     (
       (supplier-id (unwrap! (get-supplier-id-by-controller contract-caller) ERR_UNAUTHORIZED))
-      (existing-supplier (unwrap! (get-supplier supplier-id) ERR_PANIC))
+      (existing-supplier (unwrap-panic (get-supplier supplier-id)))
       (new-supplier (merge existing-supplier {
         inbound-fee: inbound-fee, 
         outbound-fee: outbound-fee, 
@@ -233,13 +232,13 @@
   (let
     (
       (supplier-id (unwrap! (get-supplier-id-by-controller contract-caller) ERR_UNAUTHORIZED))
-      (existing-supplier (unwrap! (get-supplier supplier-id) ERR_PANIC))
+      (existing-supplier (unwrap-panic (get-supplier supplier-id)))
       (new-supplier (merge existing-supplier {
         public-key: public-key,
       }))
     )
     (asserts! (map-insert supplier-by-public-key public-key supplier-id) ERR_SUPPLIER_EXISTS)
-    (asserts! (map-delete supplier-by-public-key (get public-key existing-supplier)) ERR_PANIC)
+    (map-delete supplier-by-public-key (get public-key existing-supplier))
     (map-set supplier-by-id supplier-id new-supplier)
     (ok new-supplier)
   )
@@ -292,7 +291,7 @@
       (was-mined (asserts! was-mined-bool ERR_TX_NOT_MINED))
       (mined-height (get height block))
       (metadata (hash-metadata swapper max-base-fee max-fee-rate))
-      (htlc-redeem (generate-htlc-script-v2 sender recipient expiration-buff hash metadata))
+      (htlc-redeem (generate-htlc-script sender recipient expiration-buff hash metadata))
       (htlc-output (generate-wsh-output htlc-redeem))
       (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
       (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
@@ -304,7 +303,7 @@
       (xbtc (try! (get-swap-amount sats fee-rate base-fee)))
       (funds (get-funds supplier-id))
       (funds-ok (asserts! (>= funds xbtc) ERR_INSUFFICIENT_FUNDS))
-      (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
+      (escrowed (unwrap-panic (map-get? supplier-escrow supplier-id)))
       (new-funds (- funds xbtc))
       (new-escrow (+ escrowed xbtc))
       (expiration (try! (read-varint expiration-buff)))
@@ -331,7 +330,7 @@
     (asserts! (is-eq output-script htlc-output) ERR_INVALID_OUTPUT)
     (asserts! (is-eq (len hash) u32) ERR_INVALID_HASH)
     (asserts! (map-insert inbound-swaps txid escrow) ERR_TXID_USED)
-    (asserts! (map-insert inbound-meta txid meta) ERR_PANIC)
+    (map-insert inbound-meta txid meta)
     (asserts! (<= base-fee max-base-fee) ERR_INCONSISTENT_FEES)
     (asserts! (<= fee-rate max-fee-rate) ERR_INCONSISTENT_FEES)
     (map-set supplier-funds supplier-id new-funds)
@@ -362,7 +361,7 @@
         (preimage-ok (asserts! (is-eq (sha256 preimage) stored-hash) ERR_INVALID_PREIMAGE))
         (supplier-id (get supplier swap))
         (xbtc (get xbtc swap))
-        (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
+        (escrowed (unwrap-panic (map-get? supplier-escrow supplier-id)))
         (swapper (get swapper swap))
       )
       (map-insert inbound-preimages txid preimage)
@@ -403,7 +402,7 @@
         (xbtc (get xbtc swap))
         (supplier-id (get supplier swap))
         (funds (get-funds supplier-id))
-        (escrowed (unwrap! (get-escrow supplier-id) ERR_PANIC))
+        (escrowed (unwrap-panic (get-escrow supplier-id)))
         (new-funds (+ funds xbtc))
         (new-escrow (- escrowed xbtc))
       )
@@ -446,7 +445,7 @@
     )
     ;; #[filter(xbtc)]
     (try! (transfer xbtc tx-sender (as-contract tx-sender)))
-    (asserts! (map-insert outbound-swaps swap-id swap) ERR_PANIC)
+    (map-insert outbound-swaps swap-id swap)
     (var-set next-outbound-id (+ swap-id u1))
     (print (merge swap {
       swap-id: swap-id,
@@ -517,12 +516,13 @@
 (define-public (revoke-expired-outbound (swap-id uint))
   (let
     (
+      ;; #[filter(swap-id)]
       (swap (try! (validate-outbound-revocable swap-id)))
       (xbtc (get xbtc swap))
       (swapper (get swapper swap))
     )
     (try! (as-contract (transfer xbtc tx-sender swapper)))
-    (asserts! (map-insert completed-outbound-swaps swap-id REVOKED_OUTBOUND_TXID) ERR_PANIC)
+    (map-insert completed-outbound-swaps swap-id REVOKED_OUTBOUND_TXID)
     (print (merge swap {
       topic: "revoke-outbound",
       swap-id: swap-id,
@@ -581,7 +581,7 @@
     (
       (supplier (unwrap! (get-supplier id) ERR_INVALID_SUPPLIER))
       (funds (get-funds id))
-      (escrow (unwrap! (get-escrow id) ERR_PANIC))
+      (escrow (unwrap-panic (get-escrow id)))
     )
     (ok (merge supplier { funds: funds, escrow: escrow }))
   )
@@ -759,7 +759,7 @@
 
 ;; htlc
 
-(define-read-only (generate-htlc-script-v2
+(define-read-only (generate-htlc-script
     (sender (buff 33))
     (recipient (buff 33))
     (expiration (buff 4))

@@ -78,7 +78,7 @@ export function createLegacyHtlcScript(htlc: LegacyHTLC) {
 }
 
 /**
- * * ${swapperHex}
+ * ${metadata_hash}
  * OP_DROP
  * OP_IF
  *   OP_SHA256 ${hash}

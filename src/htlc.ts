@@ -27,7 +27,7 @@ export function encodeExpiration(expiration?: bigint): Uint8Array {
 }
 
 /**
- * * ${swapperHex}
+ * ${metadata_hash}
  * OP_DROP
  * OP_IF
  *   OP_SHA256 ${hash}

@@ -3485,8 +3485,8 @@ export const contracts = {
         [bytes: TypedAbiArg<Uint8Array, "bytes">],
         Uint8Array
       >,
-      generateHtlcScriptV2: {
-        "name": "generate-htlc-script-v2",
+      generateHtlcScript: {
+        "name": "generate-htlc-script",
         "access": "read_only",
         "args": [
           { "name": "sender", "type": { "buffer": { "length": 33 } } },
@@ -4277,16 +4277,6 @@ export const contracts = {
         },
         access: "constant",
       } as TypedAbiVariable<Response<null, bigint>>,
-      ERR_PANIC: {
-        name: "ERR_PANIC",
-        type: {
-          response: {
-            ok: "none",
-            error: "uint128",
-          },
-        },
-        access: "constant",
-      } as TypedAbiVariable<Response<null, bigint>>,
       ERR_READ_UINT: {
         name: "ERR_READ_UINT",
         type: {
@@ -4576,10 +4566,6 @@ export const contracts = {
       ERR_INVALID_TX: {
         isOk: false,
         value: 10n,
-      },
-      ERR_PANIC: {
-        isOk: false,
-        value: 1n,
       },
       ERR_READ_UINT: {
         isOk: false,

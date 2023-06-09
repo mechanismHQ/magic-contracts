@@ -1,5 +1,5 @@
---- magic-v1/bridge.clar
-+++ ./contracts/magic.clar
+--- ../bridge/contracts/bridge.clar	2022-08-26 11:41:24
++++ ./contracts/magic.clar	2023-06-09 11:00:39
 @@ -19,21 +19,21 @@
  ;; supplier-id -> xBTC
  (define-map supplier-escrow uint uint)
@@ -35,7 +35,28 @@
    created-at: uint,
  })
  ;; mapping of swap -> txid
-@@ -162,6 +161,7 @@
+@@ -75,7 +74,6 @@
+ ;; placeholder to mark inbound swap as revoked
+ (define-constant REVOKED_INBOUND_PREIMAGE 0x00)
+ 
+-(define-constant ERR_PANIC (err u1)) ;; should never be thrown
+ (define-constant ERR_SUPPLIER_EXISTS (err u2))
+ (define-constant ERR_UNAUTHORIZED (err u3))
+ (define-constant ERR_ADD_FUNDS (err u4))
+@@ -138,9 +136,9 @@
+         inbound-base-fee: inbound-base-fee,
+       })
+     )
+-    (asserts! (map-insert supplier-by-id id supplier) ERR_PANIC)
+-    (asserts! (map-insert supplier-funds id u0) ERR_PANIC)
+-    (asserts! (map-insert supplier-escrow id u0) ERR_PANIC)
++    (map-insert supplier-by-id id supplier)
++    (map-insert supplier-funds id u0)
++    (map-insert supplier-escrow id u0)
+     (try! (validate-fee inbound-fee))
+     (try! (validate-fee outbound-fee))
+ 
+@@ -162,6 +160,7 @@
  (define-public (add-funds (amount uint))
    (let
      (
@@ -43,10 +64,33 @@
        (supplier-id (unwrap! (get-supplier-id-by-controller contract-caller) ERR_UNAUTHORIZED))
        (existing-funds (get-funds supplier-id))
        (new-funds (+ amount existing-funds))
-@@ -245,25 +245,6 @@
-   )
- )
- 
+@@ -209,7 +208,7 @@
+   (let
+     (
+       (supplier-id (unwrap! (get-supplier-id-by-controller contract-caller) ERR_UNAUTHORIZED))
+-      (existing-supplier (unwrap! (get-supplier supplier-id) ERR_PANIC))
++      (existing-supplier (unwrap-panic (get-supplier supplier-id)))
+       (new-supplier (merge existing-supplier {
+         inbound-fee: inbound-fee, 
+         outbound-fee: outbound-fee, 
+@@ -233,34 +232,15 @@
+   (let
+     (
+       (supplier-id (unwrap! (get-supplier-id-by-controller contract-caller) ERR_UNAUTHORIZED))
+-      (existing-supplier (unwrap! (get-supplier supplier-id) ERR_PANIC))
++      (existing-supplier (unwrap-panic (get-supplier supplier-id)))
+       (new-supplier (merge existing-supplier {
+         public-key: public-key,
+       }))
+     )
+     (asserts! (map-insert supplier-by-public-key public-key supplier-id) ERR_SUPPLIER_EXISTS)
+-    (asserts! (map-delete supplier-by-public-key (get public-key existing-supplier)) ERR_PANIC)
++    (map-delete supplier-by-public-key (get public-key existing-supplier))
+     (map-set supplier-by-id supplier-id new-supplier)
+     (ok new-supplier)
+-  )
+-)
+-
 -
 -;; As a swapper, register with the contract to generate your `swapper-id`.
 -;; This is required to generate BTC deposit addresses that include metadata
@@ -63,22 +107,23 @@
 -    (asserts! (map-insert swapper-by-principal swapper id) ERR_SWAPPER_EXISTS)
 -    (var-set next-swapper-id (+ id u1))
 -    (ok id)
--  )
--)
--
- ;; Escrow funds for a supplier after sending BTC during an inbound swap.
- ;; Validates that the BTC tx is valid by re-constructing the HTLC script
- ;; and comparing it to the BTC tx.
-@@ -289,6 +270,8 @@
- ;; @param swapper-buff; a 4-byte integer that indicates the `swapper-id`
+   )
+ )
+ 
+@@ -286,9 +266,10 @@
+ ;; @param recipient; The supplier's public key used in the HTLC
+ ;; @param expiration-buff; A 4-byte integer the indicated the expiration of the HTLC
+ ;; @param hash; a hash of the `preimage` used in this swap
+-;; @param swapper-buff; a 4-byte integer that indicates the `swapper-id`
++;; @param swapper; the STX address receiving xBTC from this swap
  ;; @param supplier-id; the supplier used in this swap
- ;; @param min-to-receive; minimum receivable calculated off-chain to avoid the supplier front-run the swap by adjusting fees
+-;; @param min-to-receive; minimum receivable calculated off-chain to avoid the supplier front-run the swap by adjusting fees
 +;; @param max-base-fee; the maximum base fee that the supplier can charge
 +;; @param max-fee-rate; the maximum fee rate that the supplier can charge
  (define-public (escrow-swap
      (block { header: (buff 80), height: uint })
      (prev-blocks (list 10 (buff 80)))
-@@ -299,35 +282,37 @@
+@@ -299,35 +280,37 @@
      (recipient (buff 33))
      (expiration-buff (buff 4))
      (hash (buff 32))
@@ -97,7 +142,7 @@
 -      (htlc-redeem (generate-htlc-script sender recipient expiration-buff hash swapper-buff))
 -      (htlc-output (generate-script-hash htlc-redeem))
 +      (metadata (hash-metadata swapper max-base-fee max-fee-rate))
-+      (htlc-redeem (generate-htlc-script-v2 sender recipient expiration-buff hash metadata))
++      (htlc-redeem (generate-htlc-script sender recipient expiration-buff hash metadata))
 +      (htlc-output (generate-wsh-output htlc-redeem))
        (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
        (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
@@ -110,7 +155,8 @@
 +      (xbtc (try! (get-swap-amount sats fee-rate base-fee)))
        (funds (get-funds supplier-id))
        (funds-ok (asserts! (>= funds xbtc) ERR_INSUFFICIENT_FUNDS))
-       (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
+-      (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
++      (escrowed (unwrap-panic (map-get? supplier-escrow supplier-id)))
        (new-funds (- funds xbtc))
        (new-escrow (+ escrowed xbtc))
 -      (expiration (try! (read-uint32 expiration-buff (len expiration-buff))))
@@ -124,7 +170,7 @@
          supplier: supplier-id,
          xbtc: xbtc,
          expiration: (+ mined-height (- expiration ESCROW_EXPIRATION)),
-@@ -342,13 +327,14 @@
+@@ -342,13 +325,14 @@
        })
      )
      ;; assert tx-sender is swapper
@@ -134,23 +180,35 @@
      (asserts! (is-eq output-script htlc-output) ERR_INVALID_OUTPUT)
      (asserts! (is-eq (len hash) u32) ERR_INVALID_HASH)
      (asserts! (map-insert inbound-swaps txid escrow) ERR_TXID_USED)
-     (asserts! (map-insert inbound-meta txid meta) ERR_PANIC)
+-    (asserts! (map-insert inbound-meta txid meta) ERR_PANIC)
 -    (asserts! (>= xbtc min-to-receive) ERR_INCONSISTENT_FEES)
++    (map-insert inbound-meta txid meta)
 +    (asserts! (<= base-fee max-base-fee) ERR_INCONSISTENT_FEES)
 +    (asserts! (<= fee-rate max-fee-rate) ERR_INCONSISTENT_FEES)
      (map-set supplier-funds supplier-id new-funds)
      (map-set supplier-escrow supplier-id new-escrow)
      (print (merge (merge escrow meta) { 
-@@ -378,7 +364,7 @@
+@@ -377,8 +361,8 @@
+         (preimage-ok (asserts! (is-eq (sha256 preimage) stored-hash) ERR_INVALID_PREIMAGE))
          (supplier-id (get supplier swap))
          (xbtc (get xbtc swap))
-         (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
+-        (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
 -        (swapper (unwrap! (get-swapper-principal (get swapper swap)) ERR_PANIC))
++        (escrowed (unwrap-panic (map-get? supplier-escrow supplier-id)))
 +        (swapper (get swapper swap))
        )
        (map-insert inbound-preimages txid preimage)
        (try! (as-contract (transfer xbtc tx-sender swapper)))
-@@ -435,8 +421,6 @@
+@@ -418,7 +402,7 @@
+         (xbtc (get xbtc swap))
+         (supplier-id (get supplier swap))
+         (funds (get-funds supplier-id))
+-        (escrowed (unwrap! (get-escrow supplier-id) ERR_PANIC))
++        (escrowed (unwrap-panic (get-escrow supplier-id)))
+         (new-funds (+ funds xbtc))
+         (new-escrow (- escrowed xbtc))
+       )
+@@ -435,18 +419,15 @@
    )
  )
  
@@ -159,16 +217,19 @@
  ;; Initiate an outbound swap.
  ;; Swapper provides the amount of xBTC and their withdraw address.
  ;;
-@@ -446,7 +430,7 @@
- ;; @param btc-version; the address version for the swapper's BTC address
- ;; @param btc-hash; the hash for the swapper's BTC address
+ ;; @returns the auto-generated swap-id of this swap
+ ;;
+ ;; @param xbtc; amount of xBTC (sats) to swap
+-;; @param btc-version; the address version for the swapper's BTC address
+-;; @param btc-hash; the hash for the swapper's BTC address
++;; @param output; the output script for the swapper's BTC address
  ;; @param supplier-id; the supplier used for this swap
 -(define-public (initiate-outbound-swap (xbtc uint) (btc-version (buff 1)) (btc-hash (buff 20)) (supplier-id uint))
 +(define-public (initiate-outbound-swap (xbtc uint) (output (buff 128)) (supplier-id uint))
    (let
      (
        (supplier (unwrap! (map-get? supplier-by-id supplier-id) ERR_INVALID_SUPPLIER))
-@@ -456,14 +440,13 @@
+@@ -456,16 +437,15 @@
          sats: sats,
          xbtc: xbtc,
          supplier: supplier-id,
@@ -183,9 +244,12 @@
 -    (try! (validate-btc-addr btc-version btc-hash))
 +    ;; #[filter(xbtc)]
      (try! (transfer xbtc tx-sender (as-contract tx-sender)))
-     (asserts! (map-insert outbound-swaps swap-id swap) ERR_PANIC)
+-    (asserts! (map-insert outbound-swaps swap-id swap) ERR_PANIC)
++    (map-insert outbound-swaps swap-id swap)
      (var-set next-outbound-id (+ swap-id u1))
-@@ -501,8 +484,7 @@
+     (print (merge swap {
+       swap-id: swap-id,
+@@ -501,8 +481,7 @@
      (
        (was-mined-bool (unwrap! (contract-call? .clarity-bitcoin was-tx-mined-prev? block prev-blocks tx proof) ERR_TX_NOT_MINED))
        (was-mined (asserts! was-mined-bool ERR_TX_NOT_MINED))
@@ -195,7 +259,7 @@
        (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
        (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
        (output-script (get scriptPubKey output))
-@@ -513,7 +495,7 @@
+@@ -513,7 +492,7 @@
        (funds-before (get-funds supplier))
      )
      (map-set supplier-funds supplier (+ funds-before xbtc))
@@ -204,14 +268,31 @@
      (asserts! (map-insert completed-outbound-swaps swap-id txid) ERR_ALREADY_FINALIZED)
      (asserts! (map-insert completed-outbound-swap-txids txid swap-id) ERR_TXID_USED)
      (asserts! (>= output-sats (get sats swap)) ERR_INSUFFICIENT_AMOUNT)
-@@ -593,16 +575,7 @@
-   (map-get? completed-outbound-swap-txids txid)
- )
+@@ -537,12 +516,13 @@
+ (define-public (revoke-expired-outbound (swap-id uint))
+   (let
+     (
++      ;; #[filter(swap-id)]
+       (swap (try! (validate-outbound-revocable swap-id)))
+       (xbtc (get xbtc swap))
+       (swapper (get swapper swap))
+     )
+     (try! (as-contract (transfer xbtc tx-sender swapper)))
+-    (asserts! (map-insert completed-outbound-swaps swap-id REVOKED_OUTBOUND_TXID) ERR_PANIC)
++    (map-insert completed-outbound-swaps swap-id REVOKED_OUTBOUND_TXID)
+     (print (merge swap {
+       topic: "revoke-outbound",
+       swap-id: swap-id,
+@@ -591,18 +571,9 @@
  
--(define-read-only (get-swapper-id (swapper principal))
--  (map-get? swapper-by-principal swapper)
+ (define-read-only (get-completed-outbound-swap-by-txid (txid (buff 32)))
+   (map-get? completed-outbound-swap-txids txid)
 -)
 -
+-(define-read-only (get-swapper-id (swapper principal))
+-  (map-get? swapper-by-principal swapper)
+ )
+ 
 -(define-read-only (get-swapper-principal (id uint))
 -  (map-get? swapper-by-id id)
 -)
@@ -221,7 +302,16 @@
  (define-read-only (get-next-outbound-id) (var-get next-outbound-id))
  
  (define-read-only (get-full-supplier (id uint))
-@@ -625,9 +598,8 @@
+@@ -610,7 +581,7 @@
+     (
+       (supplier (unwrap! (get-supplier id) ERR_INVALID_SUPPLIER))
+       (funds (get-funds id))
+-      (escrow (unwrap! (get-escrow id) ERR_PANIC))
++      (escrow (unwrap-panic (get-escrow id)))
+     )
+     (ok (merge supplier { funds: funds, escrow: escrow }))
+   )
+@@ -625,9 +596,8 @@
      (
        (swap (unwrap! (get-inbound-swap txid) ERR_INVALID_ESCROW))
        (meta (unwrap! (get-inbound-meta txid) ERR_INVALID_ESCROW))
@@ -232,7 +322,7 @@
    )
  )
  
-@@ -669,27 +641,21 @@
+@@ -669,27 +639,21 @@
    )
  )
  
@@ -273,13 +363,25 @@
  )
  
  (define-read-only (get-swap-amount (amount uint) (fee-rate int) (base-fee int))
-@@ -806,103 +772,73 @@
+@@ -776,17 +740,6 @@
+   )
+ )
  
- ;; htlc
- 
--(define-read-only (generate-htlc-script
-+(define-read-only (generate-htlc-script-v2
-     (sender (buff 33))
+-(define-read-only (validate-btc-addr (version (buff 1)) (hash (buff 20)))
+-  (let
+-    (
+-      (valid-hash (is-eq (len hash) u20))
+-      (valid-version (or (is-eq version P2PKH_VERSION) (is-eq version P2SH_VERSION)))
+-    )
+-    (asserts! (and valid-hash valid-version) ERR_INVALID_BTC_ADDR)
+-    (ok true)
+-  )
+-)
+-
+ ;; lookup an outbound swap and validate that it is revocable.
+ ;; to be revoked, it must be expired and not finalized
+ (define-read-only (validate-outbound-revocable (swap-id uint))
+@@ -811,98 +764,51 @@
      (recipient (buff 33))
      (expiration (buff 4))
      (hash (buff 32))
@@ -388,22 +490,8 @@
  
 -(define-read-only (buff-to-u8 (byte (buff 1)))
 -    (unwrap-panic (index-of BUFF_TO_BYTE byte)))
-+(define-read-only (test-serialize-uint (num uint))
-+  (let
-+    (
-+      (serialized (unwrap-panic (to-consensus-buff? num)))
- 
-+    )
-+    {
-+      buff: serialized,
-+      unwrapped: (buff-to-uint-be (unwrap-panic (as-max-len?
-+        (unwrap-panic (slice? serialized u1 u17))
-+        u16
-+      )))
-+    }
-+  )
-+)
- 
+-
+-
 -(define-constant BUFF_TO_BYTE (list 
 -   0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c 0x0d 0x0e 0x0f
 -   0x10 0x11 0x12 0x13 0x14 0x15 0x16 0x17 0x18 0x19 0x1a 0x1b 0x1c 0x1d 0x1e 0x1f
@@ -422,5 +510,4 @@
 -   0xe0 0xe1 0xe2 0xe3 0xe4 0xe5 0xe6 0xe7 0xe8 0xe9 0xea 0xeb 0xec 0xed 0xee 0xef
 -   0xf0 0xf1 0xf2 0xf3 0xf4 0xf5 0xf6 0xf7 0xf8 0xf9 0xfa 0xfb 0xfc 0xfd 0xfe 0xff
 -))
-+
 +(define-constant BUFF_TO_BYTE (list 0x00 0x01 0x02 0x03 0x04))

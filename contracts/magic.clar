@@ -244,32 +244,35 @@
   )
 )
 
-;; Escrow funds for a supplier after sending BTC during an inbound swap.
-;; Validates that the BTC tx is valid by re-constructing the HTLC script
-;; and comparing it to the BTC tx.
-;; Validates that the HTLC data (like expiration) is valid.
-;; 
-;; `tx-sender` must be equal to the swapper embedded in the HTLC. This ensures
-;; that the `min-to-receive` parameter is provided by the end-user.
+;; Reserve the funds from a supplier's account after the Bitcoin transaction is sent during an inbound swap.
+;; The function validates the Bitcoin transaction by reconstructing the HTLC script and comparing it to the Bitcoin transaction.
+;; It also ensures that the HTLC parameters (like expiration) are valid.
+;; The `tx-sender` must be the same as the `swapper` embedded in the HTLC, ensuring that the `min-to-receive` parameter is provided by the end-user.
 ;;
-;; @returns metadata regarding this inbound swap (see `inbound-meta` map)
+;; @returns metadata regarding the escrowed swap (refer to `inbound-meta` map for fields)
 ;;
-;; @param block; a tuple containing `header` (the Bitcoin block header) and the `height` (Stacks height)
-;; where the BTC tx was confirmed.
-;; @param prev-blocks; because Clarity contracts can't get Bitcoin headers when there is no Stacks block,
-;; this param allows users to specify the chain of block headers going back to the block where the
-;; BTC tx was confirmed.
-;; @param tx; the hex data of the BTC tx
-;; @param proof; a merkle proof to validate inclusion of this tx in the BTC block
-;; @param output-index; the index of the HTLC output in the BTC tx
-;; @param sender; The swapper's public key used in the HTLC
-;; @param recipient; The supplier's public key used in the HTLC
-;; @param expiration-buff; A 4-byte integer the indicated the expiration of the HTLC
-;; @param hash; a hash of the `preimage` used in this swap
-;; @param swapper; the STX address receiving xBTC from this swap
-;; @param supplier-id; the supplier used in this swap
-;; @param max-base-fee; the maximum base fee that the supplier can charge
-;; @param max-fee-rate; the maximum fee rate that the supplier can charge
+;; @param block; a tuple containing the `header` (Bitcoin block header) and `height` (Stacks block height) where the Bitcoin transaction was confirmed.
+;; @param prev-blocks; due to the fact that Clarity contracts cannot access Bitcoin headers when there is no Stacks block, this parameter allows users to specify the chain of block headers going back to the block where the Bitcoin transaction was confirmed.
+;; @param tx; the hex data of the Bitcoin transaction.
+;; @param proof; a merkle proof to validate the inclusion of this transaction in the Bitcoin block.
+;; @param output-index; the index of the HTLC output in the Bitcoin transaction.
+;; @param sender; the swapper's public key used in the HTLC.
+;; @param recipient; the supplier's public key used in the HTLC.
+;; @param expiration-buff; a 4-byte buffer indicating the HTLC expiration.
+;; @param hash; the hash of the `preimage` used in this swap.
+;; @param swapper; the Stacks address receiving xBTC from this swap.
+;; @param supplier-id; the ID of the supplier used in this swap.
+;; @param max-base-fee; the maximum base fee that the supplier can charge.
+;; @param max-fee-rate; the maximum fee rate that the supplier can charge.
+;;
+;; @throws ERR_TX_NOT_MINED if the transaction was not mined.
+;; @throws ERR_INVALID_TX if the transaction is invalid.
+;; @throws ERR_INVALID_SUPPLIER if the supplier is invalid.
+;; @throws ERR_INSUFFICIENT_FUNDS if there are not enough funds for the swap.
+;; @throws ERR_INVALID_OUTPUT if the output script does not match the HTLC script or if the supplier's public key does not match the recipient.
+;; @throws ERR_INVALID_HASH if the hash length is not 32 bytes.
+;; @throws ERR_TXID_USED if the transaction id has already been used.
+;; @throws ERR_INCONSISTENT_FEES if the base fee or the fee rate are greater than the maximum allowed values.
 (define-public (escrow-swap
     (block { header: (buff 80), height: uint })
     (prev-blocks (list 10 (buff 80)))
@@ -324,9 +327,8 @@
         sats: sats,
       })
     )
-    ;; assert tx-sender is swapper
-    ;; (asserts! (is-eq tx-sender (unwrap! (map-get? swapper-by-id swapper-id) ERR_SWAPPER_NOT_FOUND)) ERR_UNAUTHORIZED)
     (asserts! (is-eq (get public-key supplier) recipient) ERR_INVALID_OUTPUT)
+    ;; #[filter(output-index)]
     (asserts! (is-eq output-script htlc-output) ERR_INVALID_OUTPUT)
     (asserts! (is-eq (len hash) u32) ERR_INVALID_HASH)
     (asserts! (map-insert inbound-swaps txid escrow) ERR_TXID_USED)
@@ -343,14 +345,20 @@
   )
 )
 
-;; Finalize an inbound swap by revealing the preimage.
-;; Validates that `sha256(preimage)` is equal to the `hash` provided when
-;; escrowing the swap.
+;; Conclude an inbound swap by revealing the preimage.
+;; The function validates that `sha256(preimage)` is equivalent to the `hash` given when the swap was escrowed.
+;; 
+;; This function updates the supplier escrow and the user inbound volume. If successful, the funds are transferred from the contract to the swapper.
 ;;
-;; @returns metadata relating to the swap (see `inbound-swaps` map)
+;; @returns metadata associated with the swap (refer to `inbound-swaps` map for fields)
 ;;
-;; @param txid; the txid of the BTC tx used for this inbound swap
-;; @param preimage; the preimage that hashes to the swap's `hash`
+;; @param txid; the transaction ID of the Bitcoin transaction utilized for this inbound swap.
+;; @param preimage; the preimage that when hashed, results in the swap's `hash`.
+;;
+;; @throws ERR_ALREADY_FINALIZED if the preimage already exists for the provided transaction id.
+;; @throws ERR_INVALID_ESCROW if there is no swap associated with the provided transaction id.
+;; @throws ERR_INVALID_PREIMAGE if the hash of the preimage does not match the stored hash.
+;; @throws ERR_ESCROW_EXPIRED if the block height has exceeded the swap's expiration height.
 (define-public (finalize-swap (txid (buff 32)) (preimage (buff 128)))
   (match (map-get? inbound-preimages txid)
     existing ERR_ALREADY_FINALIZED
@@ -639,6 +647,14 @@
   )
 )
 
+;; Serialize the metadata for a transaction involving a swapper, base-fee, and a fee-rate.
+;; This function calls to the underlying `to-consensus-muff` function to serialize the data.
+;;
+;; @returns the serialized buffer representing the metadata
+;;
+;; @param swapper; the principal involved in the transaction
+;; @param base-fee; the base fee for the transaction
+;; @param fee-rate; the fee rate for the transaction
 (define-read-only (serialize-metadata (swapper principal) (base-fee int) (fee-rate int))
   (unwrap-panic (to-consensus-buff? {
     swapper: swapper,
@@ -656,6 +672,17 @@
   (sha256 (serialize-metadata swapper base-fee fee-rate))
 )
 
+;; Compute the swap amount by applying a fee rate and deducting a base fee from the initial amount.
+;; If the base-fee is greater than or equal to the amount after the fee rate deduction,
+;; an error is thrown indicating insufficient amount.
+;;
+;; @returns the final amount after applying the fee rate and deducting the base fee, or an error
+;;
+;; @param amount; the original amount to be swapped
+;; @param fee-rate; the fee rate to be deducted from the original amount
+;; @param base-fee; the base fee to be deducted after applying the fee rate
+;;
+;; @throws ERR_INSUFFICIENT_AMOUNT if the base-fee is greater than or equal to the amount after applying the fee rate
 (define-read-only (get-swap-amount (amount uint) (fee-rate int) (base-fee int))
   (let
     (
@@ -668,6 +695,14 @@
   )
 )
 
+;; Calculate the transaction amount with a fee rate applied.
+;; This function computes a new amount by subtracting the fee-rate from the amount,
+;; treating the result as a percentage of the original amount.
+;;
+;; @returns the calculated amount after applying the fee rate
+;;
+;; @param amount; the original amount of the transaction
+;; @param fee-rate; the fee rate to be deducted from the original amount
 (define-read-only (get-amount-with-fee-rate (amount uint) (fee-rate int))
   (let
     (
@@ -725,6 +760,16 @@
   )
 )
 
+;; Validate a fee by checking if it falls within an acceptable range.
+;; The acceptable range is between -10000 and 10000 (exclusive). 
+;; If the fee does not fall within this range, an error is thrown indicating an invalid fee.
+;; If no fee is provided, it defaults to true without performing any validation.
+;;
+;; @returns true if the fee is within the acceptable range, or an error
+;;
+;; @param fee-opt; the optional fee to be validated
+;;
+;; @throws ERR_FEE_INVALID if the fee does not fall within the acceptable range
 (define-read-only (validate-fee (fee-opt (optional int)))
   (match fee-opt
     fee (let
@@ -740,8 +785,20 @@
   )
 )
 
-;; lookup an outbound swap and validate that it is revocable.
-;; to be revoked, it must be expired and not finalized
+;; Validate if an outbound swap is revocable.
+;; A swap is considered revocable if it is expired and not yet finalized.
+;; The function fetches the swap using the provided swap-id, checks if the swap is expired, 
+;; and if it has not yet been finalized.
+;; If the swap is not expired or has been finalized, an error is thrown respectively.
+;; 
+;; @returns the swap if it is revocable, or an error
+;;
+;; @param swap-id; the ID of the outbound swap to be checked for revocability
+;;
+;; @throws ERR_SWAP_NOT_FOUND if no swap is found with the provided swap-id
+;; @throws ERR_REVOKE_OUTBOUND_NOT_EXPIRED if the swap is not yet expired
+;; @throws ERR_REVOKE_OUTBOUND_IS_FINALIZED if the swap has been finalized
+
 (define-read-only (validate-outbound-revocable (swap-id uint))
   (let
     (
@@ -759,6 +816,18 @@
 
 ;; htlc
 
+;; Generate a hashed timelock contract (HTLC) script.
+;; The function concatenates various components including sender, recipient, expiration, 
+;; hash, and metadata to form the HTLC script.
+;; These scripts allow locked transactions to be spent if certain conditions are met. 
+;;
+;; @returns the HTLC script
+;;
+;; @param sender; a 33-byte public key of the sender
+;; @param recipient; a 33-byte public key of the recipient
+;; @param expiration; a 4-byte expiration time buffer
+;; @param hash; a 32-byte hash of the secret
+;; @param metadata; a 32-byte buffer containing hashed metadata for the transaction - see [`hash-metadata`](#hash-metadata)
 (define-read-only (generate-htlc-script
     (sender (buff 33))
     (recipient (buff 33))
@@ -780,6 +849,13 @@
   ))))))))))
 )
 
+;; Generate a SegWit script hash (wsh) output.
+;; The function computes a SHA256 hash of the provided script and prepends it with `0x0020`.
+;; The output can be used as a Pay-to-Witness-Script-Hash (P2WSH) output script.
+;;
+;; @returns a P2WSH output script
+;;
+;; @param script; a 148-byte buffer containing the script from which to generate the output
 (define-read-only (generate-wsh-output (script (buff 148)))
   (concat 0x0020 (sha256 script))
 )

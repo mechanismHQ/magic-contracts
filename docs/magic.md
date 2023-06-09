@@ -46,7 +46,7 @@
 - [`validate-expiration`](#validate-expiration)
 - [`validate-fee`](#validate-fee)
 - [`validate-outbound-revocable`](#validate-outbound-revocable)
-- [`generate-htlc-script-v2`](#generate-htlc-script-v2)
+- [`generate-htlc-script`](#generate-htlc-script)
 - [`generate-wsh-output`](#generate-wsh-output)
 - [`bytes-len`](#bytes-len)
 - [`read-varint`](#read-varint)
@@ -93,7 +93,6 @@
 - [`P2SH_VERSION`](#P2SH_VERSION)
 - [`REVOKED_OUTBOUND_TXID`](#REVOKED_OUTBOUND_TXID)
 - [`REVOKED_INBOUND_PREIMAGE`](#REVOKED_INBOUND_PREIMAGE)
-- [`ERR_PANIC`](#ERR_PANIC)
 - [`ERR_SUPPLIER_EXISTS`](#ERR_SUPPLIER_EXISTS)
 - [`ERR_UNAUTHORIZED`](#ERR_UNAUTHORIZED)
 - [`ERR_ADD_FUNDS`](#ERR_ADD_FUNDS)
@@ -129,7 +128,7 @@
 
 ### register-supplier
 
-[View in file](../contracts/magic.clar#L120)
+[View in file](../contracts/magic.clar#L119)
 
 `(define-public (register-supplier ((public-key (buff 33)) (inbound-fee (optional int)) (outbound-fee (optional int)) (outbound-base-fee int) (inbound-base-fee int) (funds uint)) (response uint uint))`
 
@@ -162,9 +161,9 @@ Register a supplier and add funds. Validates that the public key and
         inbound-base-fee: inbound-base-fee,
       })
     )
-    (asserts! (map-insert supplier-by-id id supplier) ERR_PANIC)
-    (asserts! (map-insert supplier-funds id u0) ERR_PANIC)
-    (asserts! (map-insert supplier-escrow id u0) ERR_PANIC)
+    (map-insert supplier-by-id id supplier)
+    (map-insert supplier-funds id u0)
+    (map-insert supplier-escrow id u0)
     (try! (validate-fee inbound-fee))
     (try! (validate-fee outbound-fee))
 
@@ -193,7 +192,7 @@ Register a supplier and add funds. Validates that the public key and
 
 ### add-funds
 
-[View in file](../contracts/magic.clar#L161)
+[View in file](../contracts/magic.clar#L160)
 
 `(define-public (add-funds ((amount uint)) (response uint uint))`
 
@@ -231,7 +230,7 @@ As a supplier, add funds. The `supplier-id` is automatically looked up from the
 
 ### remove-funds
 
-[View in file](../contracts/magic.clar#L180)
+[View in file](../contracts/magic.clar#L179)
 
 `(define-public (remove-funds ((amount uint)) (response uint uint))`
 
@@ -269,7 +268,7 @@ As a supplier, remove funds.
 
 ### update-supplier-fees
 
-[View in file](../contracts/magic.clar#L203)
+[View in file](../contracts/magic.clar#L202)
 
 `(define-public (update-supplier-fees ((inbound-fee (optional int)) (outbound-fee (optional int)) (outbound-base-fee int) (inbound-base-fee int)) (response (tuple (controller principal) (inbound-base-fee int) (inbound-fee (optional int)) (outbound-base-fee int) (outbound-fee (optional int)) (public-key (buff 33))) uint))`
 
@@ -290,7 +289,7 @@ Update fees for a supplier
   (let
     (
       (supplier-id (unwrap! (get-supplier-id-by-controller contract-caller) ERR_UNAUTHORIZED))
-      (existing-supplier (unwrap! (get-supplier supplier-id) ERR_PANIC))
+      (existing-supplier (unwrap-panic (get-supplier supplier-id)))
       (new-supplier (merge existing-supplier {
         inbound-fee: inbound-fee, 
         outbound-fee: outbound-fee, 
@@ -319,7 +318,7 @@ Update fees for a supplier
 
 ### update-supplier-public-key
 
-[View in file](../contracts/magic.clar#L232)
+[View in file](../contracts/magic.clar#L231)
 
 `(define-public (update-supplier-public-key ((public-key (buff 33))) (response (tuple (controller principal) (inbound-base-fee int) (inbound-fee (optional int)) (outbound-base-fee int) (outbound-fee (optional int)) (public-key (buff 33))) uint))`
 
@@ -335,13 +334,13 @@ Update the public-key for a supplier
   (let
     (
       (supplier-id (unwrap! (get-supplier-id-by-controller contract-caller) ERR_UNAUTHORIZED))
-      (existing-supplier (unwrap! (get-supplier supplier-id) ERR_PANIC))
+      (existing-supplier (unwrap-panic (get-supplier supplier-id)))
       (new-supplier (merge existing-supplier {
         public-key: public-key,
       }))
     )
     (asserts! (map-insert supplier-by-public-key public-key supplier-id) ERR_SUPPLIER_EXISTS)
-    (asserts! (map-delete supplier-by-public-key (get public-key existing-supplier)) ERR_PANIC)
+    (map-delete supplier-by-public-key (get public-key existing-supplier))
     (map-set supplier-by-id supplier-id new-supplier)
     (ok new-supplier)
   )
@@ -358,7 +357,7 @@ Update the public-key for a supplier
 
 ### escrow-swap
 
-[View in file](../contracts/magic.clar#L274)
+[View in file](../contracts/magic.clar#L273)
 
 `(define-public (escrow-swap ((block (tuple (header (buff 80)) (height uint))) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof (tuple (hashes (list 12 (buff 32))) (tree-depth uint) (tx-index uint))) (output-index uint) (sender (buff 33)) (recipient (buff 33)) (expiration-buff (buff 4)) (hash (buff 32)) (swapper principal) (supplier-id uint) (max-base-fee int) (max-fee-rate int)) (response (tuple (csv uint) (output-index uint) (redeem-script (buff 148)) (sats uint) (sender-public-key (buff 33))) uint))`
 
@@ -396,7 +395,7 @@ the `min-to-receive` parameter is provided by the end-user.
       (was-mined (asserts! was-mined-bool ERR_TX_NOT_MINED))
       (mined-height (get height block))
       (metadata (hash-metadata swapper max-base-fee max-fee-rate))
-      (htlc-redeem (generate-htlc-script-v2 sender recipient expiration-buff hash metadata))
+      (htlc-redeem (generate-htlc-script sender recipient expiration-buff hash metadata))
       (htlc-output (generate-wsh-output htlc-redeem))
       (parsed-tx (unwrap! (contract-call? .clarity-bitcoin parse-tx tx) ERR_INVALID_TX))
       (output (unwrap! (element-at (get outs parsed-tx) output-index) ERR_INVALID_TX))
@@ -408,7 +407,7 @@ the `min-to-receive` parameter is provided by the end-user.
       (xbtc (try! (get-swap-amount sats fee-rate base-fee)))
       (funds (get-funds supplier-id))
       (funds-ok (asserts! (>= funds xbtc) ERR_INSUFFICIENT_FUNDS))
-      (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
+      (escrowed (unwrap-panic (map-get? supplier-escrow supplier-id)))
       (new-funds (- funds xbtc))
       (new-escrow (+ escrowed xbtc))
       (expiration (try! (read-varint expiration-buff)))
@@ -435,7 +434,7 @@ the `min-to-receive` parameter is provided by the end-user.
     (asserts! (is-eq output-script htlc-output) ERR_INVALID_OUTPUT)
     (asserts! (is-eq (len hash) u32) ERR_INVALID_HASH)
     (asserts! (map-insert inbound-swaps txid escrow) ERR_TXID_USED)
-    (asserts! (map-insert inbound-meta txid meta) ERR_PANIC)
+    (map-insert inbound-meta txid meta)
     (asserts! (<= base-fee max-base-fee) ERR_INCONSISTENT_FEES)
     (asserts! (<= fee-rate max-fee-rate) ERR_INCONSISTENT_FEES)
     (map-set supplier-funds supplier-id new-funds)
@@ -471,7 +470,7 @@ the `min-to-receive` parameter is provided by the end-user.
 
 ### finalize-swap
 
-[View in file](../contracts/magic.clar#L355)
+[View in file](../contracts/magic.clar#L354)
 
 `(define-public (finalize-swap ((txid (buff 32)) (preimage (buff 128))) (response (tuple (expiration uint) (hash (buff 32)) (supplier uint) (swapper principal) (xbtc uint)) uint))`
 
@@ -494,7 +493,7 @@ Finalize an inbound swap by revealing the preimage. Validates that
         (preimage-ok (asserts! (is-eq (sha256 preimage) stored-hash) ERR_INVALID_PREIMAGE))
         (supplier-id (get supplier swap))
         (xbtc (get xbtc swap))
-        (escrowed (unwrap! (map-get? supplier-escrow supplier-id) ERR_PANIC))
+        (escrowed (unwrap-panic (map-get? supplier-escrow supplier-id)))
         (swapper (get swapper swap))
       )
       (map-insert inbound-preimages txid preimage)
@@ -524,7 +523,7 @@ Finalize an inbound swap by revealing the preimage. Validates that
 
 ### revoke-expired-inbound
 
-[View in file](../contracts/magic.clar#L397)
+[View in file](../contracts/magic.clar#L396)
 
 `(define-public (revoke-expired-inbound ((txid (buff 32))) (response (tuple (expiration uint) (hash (buff 32)) (supplier uint) (swapper principal) (xbtc uint)) uint))`
 
@@ -554,7 +553,7 @@ REVOKED_INBOUND_PREIMAGE (0x00).
         (xbtc (get xbtc swap))
         (supplier-id (get supplier swap))
         (funds (get-funds supplier-id))
-        (escrowed (unwrap! (get-escrow supplier-id) ERR_PANIC))
+        (escrowed (unwrap-panic (get-escrow supplier-id)))
         (new-funds (+ funds xbtc))
         (new-escrow (- escrowed xbtc))
       )
@@ -582,7 +581,7 @@ REVOKED_INBOUND_PREIMAGE (0x00).
 
 ### initiate-outbound-swap
 
-[View in file](../contracts/magic.clar#L431)
+[View in file](../contracts/magic.clar#L430)
 
 `(define-public (initiate-outbound-swap ((xbtc uint) (output (buff 128)) (supplier-id uint)) (response uint uint))`
 
@@ -613,7 +612,7 @@ withdraw address.
     )
     ;; #[filter(xbtc)]
     (try! (transfer xbtc tx-sender (as-contract tx-sender)))
-    (asserts! (map-insert outbound-swaps swap-id swap) ERR_PANIC)
+    (map-insert outbound-swaps swap-id swap)
     (var-set next-outbound-id (+ swap-id u1))
     (print (merge swap {
       swap-id: swap-id,
@@ -636,7 +635,7 @@ withdraw address.
 
 ### finalize-outbound-swap
 
-[View in file](../contracts/magic.clar#L473)
+[View in file](../contracts/magic.clar#L472)
 
 `(define-public (finalize-outbound-swap ((block (tuple (header (buff 80)) (height uint))) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof (tuple (hashes (list 12 (buff 32))) (tree-depth uint) (tx-index uint))) (output-index uint) (swap-id uint)) (response bool uint))`
 
@@ -702,7 +701,7 @@ sent the swapper BTC.
 
 ### revoke-expired-outbound
 
-[View in file](../contracts/magic.clar#L517)
+[View in file](../contracts/magic.clar#L516)
 
 `(define-public (revoke-expired-outbound ((swap-id uint)) (response (tuple (created-at uint) (output (buff 128)) (sats uint) (supplier uint) (swapper principal) (xbtc uint)) uint))`
 
@@ -718,12 +717,13 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 (define-public (revoke-expired-outbound (swap-id uint))
   (let
     (
+      ;; #[filter(swap-id)]
       (swap (try! (validate-outbound-revocable swap-id)))
       (xbtc (get xbtc swap))
       (swapper (get swapper swap))
     )
     (try! (as-contract (transfer xbtc tx-sender swapper)))
-    (asserts! (map-insert completed-outbound-swaps swap-id REVOKED_OUTBOUND_TXID) ERR_PANIC)
+    (map-insert completed-outbound-swaps swap-id REVOKED_OUTBOUND_TXID)
     (print (merge swap {
       topic: "revoke-outbound",
       swap-id: swap-id,
@@ -1016,7 +1016,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
     (
       (supplier (unwrap! (get-supplier id) ERR_INVALID_SUPPLIER))
       (funds (get-funds id))
-      (escrow (unwrap! (get-escrow id) ERR_PANIC))
+      (escrow (unwrap-panic (get-escrow id)))
     )
     (ok (merge supplier { funds: funds, escrow: escrow }))
   )
@@ -1528,17 +1528,17 @@ must be expired and not finalized
 | ------- | ---- | ----------- |
 | swap-id | uint |             |
 
-### generate-htlc-script-v2
+### generate-htlc-script
 
 [View in file](../contracts/magic.clar#L762)
 
-`(define-read-only (generate-htlc-script-v2 ((sender (buff 33)) (recipient (buff 33)) (expiration (buff 4)) (hash (buff 32)) (metadata (buff 32))) (buff 148))`
+`(define-read-only (generate-htlc-script ((sender (buff 33)) (recipient (buff 33)) (expiration (buff 4)) (hash (buff 32)) (metadata (buff 32))) (buff 148))`
 
 <details>
   <summary>Source code:</summary>
 
 ```clarity
-(define-read-only (generate-htlc-script-v2
+(define-read-only (generate-htlc-script
     (sender (buff 33))
     (recipient (buff 33))
     (expiration (buff 4))
@@ -1940,21 +1940,13 @@ placeholder to mark inbound swap as revoked
 
 [View in file](../contracts/magic.clar#L75)
 
-### ERR_PANIC
-
-```clarity
-(define-constant ERR_PANIC (err u1)) ;; should never be thrown
-```
-
-[View in file](../contracts/magic.clar#L77)
-
 ### ERR_SUPPLIER_EXISTS
 
 ```clarity
 (define-constant ERR_SUPPLIER_EXISTS (err u2))
 ```
 
-[View in file](../contracts/magic.clar#L78)
+[View in file](../contracts/magic.clar#L77)
 
 ### ERR_UNAUTHORIZED
 
@@ -1962,7 +1954,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_UNAUTHORIZED (err u3))
 ```
 
-[View in file](../contracts/magic.clar#L79)
+[View in file](../contracts/magic.clar#L78)
 
 ### ERR_ADD_FUNDS
 
@@ -1970,7 +1962,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_ADD_FUNDS (err u4))
 ```
 
-[View in file](../contracts/magic.clar#L80)
+[View in file](../contracts/magic.clar#L79)
 
 ### ERR_TRANSFER
 
@@ -1978,7 +1970,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_TRANSFER (err u5))
 ```
 
-[View in file](../contracts/magic.clar#L81)
+[View in file](../contracts/magic.clar#L80)
 
 ### ERR_SUPPLIER_NOT_FOUND
 
@@ -1986,7 +1978,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_SUPPLIER_NOT_FOUND (err u6))
 ```
 
-[View in file](../contracts/magic.clar#L82)
+[View in file](../contracts/magic.clar#L81)
 
 ### ERR_SWAPPER_NOT_FOUND
 
@@ -1994,7 +1986,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_SWAPPER_NOT_FOUND (err u7))
 ```
 
-[View in file](../contracts/magic.clar#L83)
+[View in file](../contracts/magic.clar#L82)
 
 ### ERR_FEE_INVALID
 
@@ -2002,7 +1994,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_FEE_INVALID (err u8))
 ```
 
-[View in file](../contracts/magic.clar#L84)
+[View in file](../contracts/magic.clar#L83)
 
 ### ERR_SWAPPER_EXISTS
 
@@ -2010,7 +2002,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_SWAPPER_EXISTS (err u9))
 ```
 
-[View in file](../contracts/magic.clar#L85)
+[View in file](../contracts/magic.clar#L84)
 
 ### ERR_INVALID_TX
 
@@ -2018,7 +2010,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INVALID_TX (err u10))
 ```
 
-[View in file](../contracts/magic.clar#L86)
+[View in file](../contracts/magic.clar#L85)
 
 ### ERR_INVALID_OUTPUT
 
@@ -2026,7 +2018,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INVALID_OUTPUT (err u11))
 ```
 
-[View in file](../contracts/magic.clar#L87)
+[View in file](../contracts/magic.clar#L86)
 
 ### ERR_INVALID_HASH
 
@@ -2034,7 +2026,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INVALID_HASH (err u12))
 ```
 
-[View in file](../contracts/magic.clar#L88)
+[View in file](../contracts/magic.clar#L87)
 
 ### ERR_INVALID_SUPPLIER
 
@@ -2042,7 +2034,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INVALID_SUPPLIER (err u13))
 ```
 
-[View in file](../contracts/magic.clar#L89)
+[View in file](../contracts/magic.clar#L88)
 
 ### ERR_INSUFFICIENT_FUNDS
 
@@ -2050,7 +2042,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INSUFFICIENT_FUNDS (err u14))
 ```
 
-[View in file](../contracts/magic.clar#L90)
+[View in file](../contracts/magic.clar#L89)
 
 ### ERR_INVALID_EXPIRATION
 
@@ -2058,7 +2050,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INVALID_EXPIRATION (err u15))
 ```
 
-[View in file](../contracts/magic.clar#L91)
+[View in file](../contracts/magic.clar#L90)
 
 ### ERR_TXID_USED
 
@@ -2066,7 +2058,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_TXID_USED (err u16))
 ```
 
-[View in file](../contracts/magic.clar#L92)
+[View in file](../contracts/magic.clar#L91)
 
 ### ERR_ALREADY_FINALIZED
 
@@ -2074,7 +2066,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_ALREADY_FINALIZED (err u17))
 ```
 
-[View in file](../contracts/magic.clar#L93)
+[View in file](../contracts/magic.clar#L92)
 
 ### ERR_INVALID_ESCROW
 
@@ -2082,7 +2074,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INVALID_ESCROW (err u18))
 ```
 
-[View in file](../contracts/magic.clar#L94)
+[View in file](../contracts/magic.clar#L93)
 
 ### ERR_INVALID_PREIMAGE
 
@@ -2090,7 +2082,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INVALID_PREIMAGE (err u19))
 ```
 
-[View in file](../contracts/magic.clar#L95)
+[View in file](../contracts/magic.clar#L94)
 
 ### ERR_ESCROW_EXPIRED
 
@@ -2098,7 +2090,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_ESCROW_EXPIRED (err u20))
 ```
 
-[View in file](../contracts/magic.clar#L96)
+[View in file](../contracts/magic.clar#L95)
 
 ### ERR_TX_NOT_MINED
 
@@ -2106,7 +2098,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_TX_NOT_MINED (err u21))
 ```
 
-[View in file](../contracts/magic.clar#L97)
+[View in file](../contracts/magic.clar#L96)
 
 ### ERR_INVALID_BTC_ADDR
 
@@ -2114,7 +2106,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INVALID_BTC_ADDR (err u22))
 ```
 
-[View in file](../contracts/magic.clar#L98)
+[View in file](../contracts/magic.clar#L97)
 
 ### ERR_SWAP_NOT_FOUND
 
@@ -2122,7 +2114,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_SWAP_NOT_FOUND (err u23))
 ```
 
-[View in file](../contracts/magic.clar#L99)
+[View in file](../contracts/magic.clar#L98)
 
 ### ERR_INSUFFICIENT_AMOUNT
 
@@ -2130,7 +2122,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INSUFFICIENT_AMOUNT (err u24))
 ```
 
-[View in file](../contracts/magic.clar#L100)
+[View in file](../contracts/magic.clar#L99)
 
 ### ERR_REVOKE_OUTBOUND_NOT_EXPIRED
 
@@ -2138,7 +2130,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_REVOKE_OUTBOUND_NOT_EXPIRED (err u25))
 ```
 
-[View in file](../contracts/magic.clar#L101)
+[View in file](../contracts/magic.clar#L100)
 
 ### ERR_REVOKE_OUTBOUND_IS_FINALIZED
 
@@ -2146,7 +2138,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_REVOKE_OUTBOUND_IS_FINALIZED (err u26))
 ```
 
-[View in file](../contracts/magic.clar#L102)
+[View in file](../contracts/magic.clar#L101)
 
 ### ERR_INCONSISTENT_FEES
 
@@ -2154,7 +2146,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_INCONSISTENT_FEES (err u27))
 ```
 
-[View in file](../contracts/magic.clar#L103)
+[View in file](../contracts/magic.clar#L102)
 
 ### ERR_REVOKE_INBOUND_NOT_EXPIRED
 
@@ -2162,7 +2154,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_REVOKE_INBOUND_NOT_EXPIRED (err u28))
 ```
 
-[View in file](../contracts/magic.clar#L104)
+[View in file](../contracts/magic.clar#L103)
 
 ### ERR_REVOKE_INBOUND_IS_FINALIZED
 
@@ -2170,7 +2162,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_REVOKE_INBOUND_IS_FINALIZED (err u29))
 ```
 
-[View in file](../contracts/magic.clar#L105)
+[View in file](../contracts/magic.clar#L104)
 
 ### ERR_READ_UINT
 

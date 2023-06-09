@@ -3114,45 +3114,6 @@ export const contracts = {
     clarity_version: 'Clarity2',
     contractName: 'clarity-bitcoin',
   },
-  clarityBitcoinV2: {
-    functions: {
-      readVarint: {
-        name: 'read-varint',
-        access: 'read_only',
-        args: [
-          {
-            name: 'ctx',
-            type: {
-              tuple: [
-                { name: 'index', type: 'uint128' },
-                { name: 'txbuff', type: { buffer: { length: 1024 } } },
-              ],
-            },
-          },
-        ],
-        outputs: { type: { response: { ok: 'bool', error: 'none' } } },
-      } as TypedAbiFunction<
-        [
-          ctx: TypedAbiArg<
-            {
-              index: number | bigint;
-              txbuff: Uint8Array;
-            },
-            'ctx'
-          >
-        ],
-        Response<boolean, null>
-      >,
-    },
-    maps: {},
-    variables: {},
-    constants: {},
-    non_fungible_tokens: [],
-    fungible_tokens: [],
-    epoch: 'Epoch21',
-    clarity_version: 'Clarity2',
-    contractName: 'clarity-bitcoin-v2',
-  },
   ftTrait: {
     functions: {},
     maps: {},
@@ -5168,12 +5129,6 @@ export const deployments = {
   clarityBitcoin: {
     devnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.clarity-bitcoin',
     simnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.clarity-bitcoin',
-    testnet: null,
-    mainnet: null,
-  },
-  clarityBitcoinV2: {
-    devnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.clarity-bitcoin-v2',
-    simnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.clarity-bitcoin-v2',
     testnet: null,
     mainnet: null,
   },

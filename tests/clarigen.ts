@@ -9,7 +9,6 @@ export const { test, contracts, accounts } = factory(simnet);
 
 export const {
   clarityBitcoin,
-  clarityBitcoinV2,
   ftTrait,
   magic,
   restrictedTokenTrait,

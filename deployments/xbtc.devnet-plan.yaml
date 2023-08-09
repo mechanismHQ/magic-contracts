@@ -64,3 +64,8 @@ plan:
             expected-sender: mjSrB3wS4xab3kYqFktwBzfTdPg367ZJ2d
             sats-amount: 500000000
             sats-per-byte: 3
+        - btc-transfer:
+            recipient: bcrt1qykgx8vxsuevr8cyev77vuumvasfh8p5q9ta0nv
+            expected-sender: mjSrB3wS4xab3kYqFktwBzfTdPg367ZJ2d
+            sats-amount: 500000000
+            sats-per-byte: 3

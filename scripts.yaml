@@ -6,7 +6,9 @@ scripts:
       - echo "Coverage generated at ./coverage/html/index.html"
 
   integrate:
-    cmd: clarinet integrate -d
+    cmd: 
+      - mkdir -p tmp/devnet
+      - clarinet integrate -d
 
   electrum_server:
     # cmd: docker run -it -p 50001:50001 -e COIN="Bitcoin" -e NET="regtest" -e DAEMON_URL="http://devnet:devnet@host.docker.internal:18443" lukechilds/electrumx

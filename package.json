@@ -23,7 +23,8 @@
     "dev:publish": "yalc publish --push",
     "test": "vitest",
     "electrum_server": "docker run -it -p 50001:50001 -e COIN=\"Bitcoin\" -e NET=\"regtest\" -e DAEMON_URL=\"http://devnet:devnet@host.docker.internal:18443\" lukechilds/electrumx",
-    "electrum_wallet": "electrum --regtest"
+    "electrum_wallet": "electrum --regtest",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@noble/hashes": "1.3.0",

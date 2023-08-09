@@ -207,7 +207,7 @@ export const contracts = {
                 { name: 'path', type: 'uint128' },
                 {
                   name: 'proof-hashes',
-                  type: { list: { type: { buffer: { length: 32 } }, length: 12 } },
+                  type: { list: { type: { buffer: { length: 32 } }, length: 20 } },
                 },
                 { name: 'root-hash', type: { buffer: { length: 32 } } },
                 { name: 'tree-depth', type: 'uint128' },
@@ -223,7 +223,7 @@ export const contracts = {
               { name: 'path', type: 'uint128' },
               {
                 name: 'proof-hashes',
-                type: { list: { type: { buffer: { length: 32 } }, length: 12 } },
+                type: { list: { type: { buffer: { length: 32 } }, length: 20 } },
               },
               { name: 'root-hash', type: { buffer: { length: 32 } } },
               { name: 'tree-depth', type: 'uint128' },
@@ -1537,7 +1537,7 @@ export const contracts = {
               tuple: [
                 {
                   name: 'hashes',
-                  type: { list: { type: { buffer: { length: 32 } }, length: 12 } },
+                  type: { list: { type: { buffer: { length: 32 } }, length: 20 } },
                 },
                 { name: 'tree-depth', type: 'uint128' },
                 { name: 'tx-index', type: 'uint128' },
@@ -1627,7 +1627,7 @@ export const contracts = {
               tuple: [
                 {
                   name: 'hashes',
-                  type: { list: { type: { buffer: { length: 32 } }, length: 12 } },
+                  type: { list: { type: { buffer: { length: 32 } }, length: 20 } },
                 },
                 { name: 'tree-depth', type: 'uint128' },
                 { name: 'tx-index', type: 'uint128' },
@@ -1678,7 +1678,7 @@ export const contracts = {
               tuple: [
                 {
                   name: 'hashes',
-                  type: { list: { type: { buffer: { length: 32 } }, length: 12 } },
+                  type: { list: { type: { buffer: { length: 32 } }, length: 20 } },
                 },
                 { name: 'tree-depth', type: 'uint128' },
                 { name: 'tx-index', type: 'uint128' },
@@ -3198,7 +3198,7 @@ export const contracts = {
               tuple: [
                 {
                   name: 'hashes',
-                  type: { list: { type: { buffer: { length: 32 } }, length: 12 } },
+                  type: { list: { type: { buffer: { length: 32 } }, length: 20 } },
                 },
                 { name: 'tree-depth', type: 'uint128' },
                 { name: 'tx-index', type: 'uint128' },
@@ -3292,7 +3292,7 @@ export const contracts = {
               tuple: [
                 {
                   name: 'hashes',
-                  type: { list: { type: { buffer: { length: 32 } }, length: 12 } },
+                  type: { list: { type: { buffer: { length: 32 } }, length: 20 } },
                 },
                 { name: 'tree-depth', type: 'uint128' },
                 { name: 'tx-index', type: 'uint128' },

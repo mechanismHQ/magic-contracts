@@ -668,7 +668,7 @@
 ;; * if the ith bit is 0, then cur-hash is hashed before the next proof-hash (cur-hash is "left").
 ;; * if the ith bit is 1, then the next proof-hash is hashed before cur-hash (cur-hash is "right").
 ;; The proof verifies if cur-hash is equal to root-hash, and we're out of proof-hashes to check.
-(define-read-only (inner-merkle-proof-verify (ctr uint) (state { path: uint, root-hash: (buff 32), proof-hashes: (list 12 (buff 32)), tree-depth: uint, cur-hash: (buff 32), verified: bool }))
+(define-read-only (inner-merkle-proof-verify (ctr uint) (state { path: uint, root-hash: (buff 32), proof-hashes: (list 20 (buff 32)), tree-depth: uint, cur-hash: (buff 32), verified: bool }))
     (if (get verified state)
         state
         (if (>= ctr (get tree-depth state))
@@ -714,7 +714,7 @@
 ;; Returns (ok true) if the proof is valid.
 ;; Returns (ok false) if the proof is invalid.
 ;; Returns (err ERR-PROOF-TOO-SHORT) if the proof's hashes aren't long enough to link the txid to the merkle root.
-(define-read-only (verify-merkle-proof (reversed-txid (buff 32)) (merkle-root (buff 32)) (proof { tx-index: uint, hashes: (list 12 (buff 32)), tree-depth: uint }))
+(define-read-only (verify-merkle-proof (reversed-txid (buff 32)) (merkle-root (buff 32)) (proof { tx-index: uint, hashes: (list 20 (buff 32)), tree-depth: uint }))
     (if (> (get tree-depth proof) (len (get hashes proof)))
         (err ERR-PROOF-TOO-SHORT)
         (ok
@@ -740,7 +740,7 @@
 ;; Returns (ok true) if the proof checks out.
 ;; Returns (ok false) if not.
 ;; Returns (err ERR-PROOF-TOO-SHORT) if the proof doesn't contain enough intermediate hash nodes in the merkle tree.
-(define-read-only (was-tx-mined? (block { header: (buff 80), height: uint }) (tx (buff 1024)) (proof { tx-index: uint, hashes: (list 12 (buff 32)), tree-depth: uint }))
+(define-read-only (was-tx-mined? (block { header: (buff 80), height: uint }) (tx (buff 1024)) (proof { tx-index: uint, hashes: (list 20 (buff 32)), tree-depth: uint }))
   (let
     (
       (header-valid (verify-block-header (get header block) (get height block)))
@@ -793,7 +793,7 @@
   )
 )
 
-(define-read-only (was-tx-mined-prev? (block { header: (buff 80), height: uint }) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof { tx-index: uint, hashes: (list 12 (buff 32)), tree-depth: uint }))
+(define-read-only (was-tx-mined-prev? (block { header: (buff 80), height: uint }) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof { tx-index: uint, hashes: (list 20 (buff 32)), tree-depth: uint }))
   (let
     (
       (header-valid (verify-block-header (get header block) (get height block)))

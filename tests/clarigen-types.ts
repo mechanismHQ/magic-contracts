@@ -210,7 +210,7 @@ export const contracts = {
                 "type": {
                   "list": {
                     "type": { "buffer": { "length": 32 } },
-                    "length": 12,
+                    "length": 20,
                   },
                 },
               },
@@ -230,7 +230,7 @@ export const contracts = {
                 "type": {
                   "list": {
                     "type": { "buffer": { "length": 32 } },
-                    "length": 12,
+                    "length": 20,
                   },
                 },
               },
@@ -1371,7 +1371,7 @@ export const contracts = {
                   "type": {
                     "list": {
                       "type": { "buffer": { "length": 32 } },
-                      "length": 12,
+                      "length": 20,
                     },
                   },
                 },
@@ -1496,7 +1496,7 @@ export const contracts = {
                   "type": {
                     "list": {
                       "type": { "buffer": { "length": 32 } },
-                      "length": 12,
+                      "length": 20,
                     },
                   },
                 },
@@ -1545,7 +1545,7 @@ export const contracts = {
                   "type": {
                     "list": {
                       "type": { "buffer": { "length": 32 } },
-                      "length": 12,
+                      "length": 20,
                     },
                   },
                 },
@@ -3077,7 +3077,7 @@ export const contracts = {
                   "type": {
                     "list": {
                       "type": { "buffer": { "length": 32 } },
-                      "length": 12,
+                      "length": 20,
                     },
                   },
                 },
@@ -3178,7 +3178,7 @@ export const contracts = {
                   "type": {
                     "list": {
                       "type": { "buffer": { "length": 32 } },
-                      "length": 12,
+                      "length": 20,
                     },
                   },
                 },

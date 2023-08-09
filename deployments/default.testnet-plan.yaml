@@ -10,41 +10,38 @@ plan:
       transactions:
         - requirement-publish:
             contract-id: SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.ft-trait
-            remap-sender: STPDXN3P19QVEB20XJ2B6JDFBYHQB9TRE01WWK34
+            remap-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             remap-principals:
-              SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STPDXN3P19QVEB20XJ2B6JDFBYHQB9TRE01WWK34
+              SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             cost: 8350
             path: "./.cache/requirements/SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.ft-trait.clar"
             clarity-version: 1
         - requirement-publish:
             contract-id: SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.restricted-token-trait
-            remap-sender: STPDXN3P19QVEB20XJ2B6JDFBYHQB9TRE01WWK34
+            remap-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             remap-principals:
-              SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STPDXN3P19QVEB20XJ2B6JDFBYHQB9TRE01WWK34
+              SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             cost: 5480
             path: "./.cache/requirements/SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.restricted-token-trait.clar"
             clarity-version: 1
         - requirement-publish:
             contract-id: SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.Wrapped-Bitcoin
-            remap-sender: STPDXN3P19QVEB20XJ2B6JDFBYHQB9TRE01WWK34
+            remap-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             remap-principals:
-              SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STPDXN3P19QVEB20XJ2B6JDFBYHQB9TRE01WWK34
+              SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             cost: 104220
             path: "./.cache/requirements/SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.Wrapped-Bitcoin.clar"
             clarity-version: 1
-      epoch: "2.0"
-    - id: 1
-      transactions:
         - contract-publish:
             contract-name: clarity-bitcoin
-            expected-sender: STPDXN3P19QVEB20XJ2B6JDFBYHQB9TRE01WWK34
+            expected-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             cost: 47820788
             path: contracts/clarity-bitcoin.clar
             anchor-block-only: true
             clarity-version: 2
         - contract-publish:
             contract-name: magic
-            expected-sender: STPDXN3P19QVEB20XJ2B6JDFBYHQB9TRE01WWK34
+            expected-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             cost: 47699880
             path: contracts/magic.clar
             anchor-block-only: true

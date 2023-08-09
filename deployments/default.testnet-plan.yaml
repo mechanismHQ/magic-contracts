@@ -13,7 +13,7 @@ plan:
             remap-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             remap-principals:
               SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
-            cost: 8350
+            cost: 1000001
             path: "./.cache/requirements/SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.ft-trait.clar"
             clarity-version: 1
         - requirement-publish:
@@ -21,7 +21,7 @@ plan:
             remap-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             remap-principals:
               SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
-            cost: 5480
+            cost: 1000001
             path: "./.cache/requirements/SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.restricted-token-trait.clar"
             clarity-version: 1
         - requirement-publish:
@@ -29,20 +29,20 @@ plan:
             remap-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
             remap-principals:
               SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
-            cost: 104220
+            cost: 1000001
             path: "./.cache/requirements/SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.Wrapped-Bitcoin.clar"
             clarity-version: 1
         - contract-publish:
             contract-name: clarity-bitcoin
             expected-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
-            cost: 47820788
+            cost: 1000001
             path: contracts/clarity-bitcoin.clar
             anchor-block-only: true
             clarity-version: 2
         - contract-publish:
             contract-name: magic
             expected-sender: STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX
-            cost: 47699880
+            cost: 1000001
             path: contracts/magic.clar
             anchor-block-only: true
             clarity-version: 2

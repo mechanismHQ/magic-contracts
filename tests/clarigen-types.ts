@@ -3247,10 +3247,12 @@ export const contracts = {
       initiateOutboundSwap: {
         "name": "initiate-outbound-swap",
         "access": "public",
-        "args": [{ "name": "xbtc", "type": "uint128" }, {
-          "name": "output",
-          "type": { "buffer": { "length": 128 } },
-        }, { "name": "supplier-id", "type": "uint128" }],
+        "args": [
+          { "name": "xbtc", "type": "uint128" },
+          { "name": "output", "type": { "buffer": { "length": 128 } } },
+          { "name": "supplier-id", "type": "uint128" },
+          { "name": "min-to-receive", "type": "uint128" },
+        ],
         "outputs": {
           "type": { "response": { "ok": "uint128", "error": "uint128" } },
         },
@@ -3259,6 +3261,7 @@ export const contracts = {
           xbtc: TypedAbiArg<number | bigint, "xbtc">,
           output: TypedAbiArg<Uint8Array, "output">,
           supplierId: TypedAbiArg<number | bigint, "supplierId">,
+          minToReceive: TypedAbiArg<number | bigint, "minToReceive">,
         ],
         Response<bigint, bigint>
       >,

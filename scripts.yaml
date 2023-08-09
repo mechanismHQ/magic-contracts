@@ -25,3 +25,7 @@ scripts:
 
   setup_xbtc:
     cmd: clarinet deployments apply -p deployments/xbtc.devnet-plan.yaml
+
+  check:
+    cmd:
+      - deno check tests/*

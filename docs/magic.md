@@ -359,7 +359,7 @@ Update the public-key for a supplier
 
 [View in file](../contracts/magic.clar#L276)
 
-`(define-public (escrow-swap ((block (tuple (header (buff 80)) (height uint))) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof (tuple (hashes (list 12 (buff 32))) (tree-depth uint) (tx-index uint))) (output-index uint) (sender (buff 33)) (recipient (buff 33)) (expiration-buff (buff 4)) (hash (buff 32)) (swapper principal) (supplier-id uint) (max-base-fee int) (max-fee-rate int)) (response (tuple (csv uint) (output-index uint) (redeem-script (buff 148)) (sats uint) (sender-public-key (buff 33))) uint))`
+`(define-public (escrow-swap ((block (tuple (header (buff 80)) (height uint))) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof (tuple (hashes (list 20 (buff 32))) (tree-depth uint) (tx-index uint))) (output-index uint) (sender (buff 33)) (recipient (buff 33)) (expiration-buff (buff 4)) (hash (buff 32)) (swapper principal) (supplier-id uint) (max-base-fee int) (max-fee-rate int)) (response (tuple (csv uint) (output-index uint) (redeem-script (buff 148)) (sats uint) (sender-public-key (buff 33))) uint))`
 
 Reserve the funds from a supplier's account after the Bitcoin transaction is
 sent during an inbound swap. The function validates the Bitcoin transaction by
@@ -389,7 +389,7 @@ maximum allowed values.
     (block { header: (buff 80), height: uint })
     (prev-blocks (list 10 (buff 80)))
     (tx (buff 1024))
-    (proof { tx-index: uint, hashes: (list 12 (buff 32)), tree-depth: uint })
+    (proof { tx-index: uint, hashes: (list 20 (buff 32)), tree-depth: uint })
     (output-index uint)
     (sender (buff 33))
     (recipient (buff 33))
@@ -467,7 +467,7 @@ maximum allowed values.
 | block           | (tuple (header (buff 80)) (height uint))                               | a tuple containing the `header` (Bitcoin block header) and `height` (Stacks block height) where the Bitcoin transaction was confirmed.                                                                                                     |
 | prev-blocks     | (list 10 (buff 80))                                                    | due to the fact that Clarity contracts cannot access Bitcoin headers when there is no Stacks block, this parameter allows users to specify the chain of block headers going back to the block where the Bitcoin transaction was confirmed. |
 | tx              | (buff 1024)                                                            | the hex data of the Bitcoin transaction.                                                                                                                                                                                                   |
-| proof           | (tuple (hashes (list 12 (buff 32))) (tree-depth uint) (tx-index uint)) | a merkle proof to validate the inclusion of this transaction in the Bitcoin block.                                                                                                                                                         |
+| proof           | (tuple (hashes (list 20 (buff 32))) (tree-depth uint) (tx-index uint)) | a merkle proof to validate the inclusion of this transaction in the Bitcoin block.                                                                                                                                                         |
 | output-index    | uint                                                                   | the index of the HTLC output in the Bitcoin transaction.                                                                                                                                                                                   |
 | sender          | (buff 33)                                                              | the swapper's public key used in the HTLC.                                                                                                                                                                                                 |
 | recipient       | (buff 33)                                                              | the supplier's public key used in the HTLC.                                                                                                                                                                                                |
@@ -601,20 +601,23 @@ REVOKED_INBOUND_PREIMAGE (0x00).
 
 ### initiate-outbound-swap
 
-[View in file](../contracts/magic.clar#L438)
+[View in file](../contracts/magic.clar#L441)
 
-`(define-public (initiate-outbound-swap ((xbtc uint) (output (buff 128)) (supplier-id uint)) (response uint uint))`
+`(define-public (initiate-outbound-swap ((xbtc uint) (output (buff 128)) (supplier-id uint) (min-to-receive uint)) (response uint uint))`
 
 Initiate an outbound swap. Swapper provides the amount of xBTC and their
 withdraw address.
 
 @returns the auto-generated swap-id of this swap
 
+@throws ERR_INCONSISTENT_FEES if `min-to-receive` is less than the calculated
+amount of sats (in BTC) that the swapper will receive
+
 <details>
   <summary>Source code:</summary>
 
 ```clarity
-(define-public (initiate-outbound-swap (xbtc uint) (output (buff 128)) (supplier-id uint))
+(define-public (initiate-outbound-swap (xbtc uint) (output (buff 128)) (supplier-id uint) (min-to-receive uint))
   (let
     (
       (supplier (unwrap! (map-get? supplier-by-id supplier-id) ERR_INVALID_SUPPLIER))
@@ -630,6 +633,7 @@ withdraw address.
       })
       (swap-id (var-get next-outbound-id))
     )
+    (asserts! (>= sats min-to-receive) ERR_INCONSISTENT_FEES)
     ;; #[filter(xbtc)]
     (try! (transfer xbtc tx-sender (as-contract tx-sender)))
     (map-insert outbound-swaps swap-id swap)
@@ -647,17 +651,18 @@ withdraw address.
 
 **Parameters:**
 
-| Name        | Type       | Description                                     |
-| ----------- | ---------- | ----------------------------------------------- |
-| xbtc        | uint       | amount of xBTC (sats) to swap                   |
-| output      | (buff 128) | the output script for the swapper's BTC address |
-| supplier-id | uint       | the supplier used for this swap                 |
+| Name           | Type       | Description                                     |
+| -------------- | ---------- | ----------------------------------------------- |
+| xbtc           | uint       | amount of xBTC (sats) to swap                   |
+| output         | (buff 128) | the output script for the swapper's BTC address |
+| supplier-id    | uint       | the supplier used for this swap                 |
+| min-to-receive | uint       |                                                 |
 
 ### finalize-outbound-swap
 
-[View in file](../contracts/magic.clar#L480)
+[View in file](../contracts/magic.clar#L484)
 
-`(define-public (finalize-outbound-swap ((block (tuple (header (buff 80)) (height uint))) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof (tuple (hashes (list 12 (buff 32))) (tree-depth uint) (tx-index uint))) (output-index uint) (swap-id uint)) (response bool uint))`
+`(define-public (finalize-outbound-swap ((block (tuple (header (buff 80)) (height uint))) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof (tuple (hashes (list 20 (buff 32))) (tree-depth uint) (tx-index uint))) (output-index uint) (swap-id uint)) (response bool uint))`
 
 Finalize an outbound swap. This method is called by the supplier after they've
 sent the swapper BTC.
@@ -672,7 +677,7 @@ sent the swapper BTC.
     (block { header: (buff 80), height: uint })
     (prev-blocks (list 10 (buff 80)))
     (tx (buff 1024))
-    (proof { tx-index: uint, hashes: (list 12 (buff 32)), tree-depth: uint })
+    (proof { tx-index: uint, hashes: (list 20 (buff 32)), tree-depth: uint })
     (output-index uint)
     (swap-id uint)
   )
@@ -715,13 +720,13 @@ sent the swapper BTC.
 | block        | (tuple (header (buff 80)) (height uint))                               | a tuple containing `header` (the Bitcoin block header) and the `height` (Stacks height) where the BTC tx was confirmed.                                                                                  |
 | prev-blocks  | (list 10 (buff 80))                                                    | because Clarity contracts can't get Bitcoin headers when there is no Stacks block, this param allows users to specify the chain of block headers going back to the block where the BTC tx was confirmed. |
 | tx           | (buff 1024)                                                            | the hex data of the BTC tx                                                                                                                                                                               |
-| proof        | (tuple (hashes (list 12 (buff 32))) (tree-depth uint) (tx-index uint)) | a merkle proof to validate inclusion of this tx in the BTC block                                                                                                                                         |
+| proof        | (tuple (hashes (list 20 (buff 32))) (tree-depth uint) (tx-index uint)) | a merkle proof to validate inclusion of this tx in the BTC block                                                                                                                                         |
 | output-index | uint                                                                   | the index of the HTLC output in the BTC tx                                                                                                                                                               |
 | swap-id      | uint                                                                   | the outbound swap ID they're finalizing                                                                                                                                                                  |
 
 ### revoke-expired-outbound
 
-[View in file](../contracts/magic.clar#L524)
+[View in file](../contracts/magic.clar#L528)
 
 `(define-public (revoke-expired-outbound ((swap-id uint)) (response (tuple (created-at uint) (output (buff 128)) (sats uint) (supplier uint) (swapper principal) (xbtc uint)) uint))`
 
@@ -763,7 +768,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-supplier-id-by-controller
 
-[View in file](../contracts/magic.clar#L544)
+[View in file](../contracts/magic.clar#L548)
 
 `(define-read-only (get-supplier-id-by-controller ((controller principal)) (optional uint))`
 
@@ -786,7 +791,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-supplier-id-by-public-key
 
-[View in file](../contracts/magic.clar#L548)
+[View in file](../contracts/magic.clar#L552)
 
 `(define-read-only (get-supplier-id-by-public-key ((public-key (buff 33))) (optional uint))`
 
@@ -809,7 +814,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-supplier
 
-[View in file](../contracts/magic.clar#L552)
+[View in file](../contracts/magic.clar#L556)
 
 `(define-read-only (get-supplier ((id uint)) (optional (tuple (controller principal) (inbound-base-fee int) (inbound-fee (optional int)) (outbound-base-fee int) (outbound-fee (optional int)) (public-key (buff 33)))))`
 
@@ -832,7 +837,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-funds
 
-[View in file](../contracts/magic.clar#L556)
+[View in file](../contracts/magic.clar#L560)
 
 `(define-read-only (get-funds ((id uint)) uint)`
 
@@ -855,7 +860,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-escrow
 
-[View in file](../contracts/magic.clar#L560)
+[View in file](../contracts/magic.clar#L564)
 
 `(define-read-only (get-escrow ((id uint)) (optional uint))`
 
@@ -878,7 +883,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-inbound-swap
 
-[View in file](../contracts/magic.clar#L564)
+[View in file](../contracts/magic.clar#L568)
 
 `(define-read-only (get-inbound-swap ((txid (buff 32))) (optional (tuple (expiration uint) (hash (buff 32)) (supplier uint) (swapper principal) (xbtc uint))))`
 
@@ -901,7 +906,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-preimage
 
-[View in file](../contracts/magic.clar#L568)
+[View in file](../contracts/magic.clar#L572)
 
 `(define-read-only (get-preimage ((txid (buff 32))) (optional (buff 128)))`
 
@@ -924,7 +929,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-outbound-swap
 
-[View in file](../contracts/magic.clar#L572)
+[View in file](../contracts/magic.clar#L576)
 
 `(define-read-only (get-outbound-swap ((id uint)) (optional (tuple (created-at uint) (output (buff 128)) (sats uint) (supplier uint) (swapper principal) (xbtc uint))))`
 
@@ -947,7 +952,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-completed-outbound-swap-txid
 
-[View in file](../contracts/magic.clar#L576)
+[View in file](../contracts/magic.clar#L580)
 
 `(define-read-only (get-completed-outbound-swap-txid ((id uint)) (optional (buff 32)))`
 
@@ -970,7 +975,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-completed-outbound-swap-by-txid
 
-[View in file](../contracts/magic.clar#L580)
+[View in file](../contracts/magic.clar#L584)
 
 `(define-read-only (get-completed-outbound-swap-by-txid ((txid (buff 32))) (optional uint))`
 
@@ -993,7 +998,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-next-supplier-id
 
-[View in file](../contracts/magic.clar#L584)
+[View in file](../contracts/magic.clar#L588)
 
 `(define-read-only (get-next-supplier-id () uint)`
 
@@ -1008,7 +1013,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-next-outbound-id
 
-[View in file](../contracts/magic.clar#L585)
+[View in file](../contracts/magic.clar#L589)
 
 `(define-read-only (get-next-outbound-id () uint)`
 
@@ -1023,7 +1028,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-full-supplier
 
-[View in file](../contracts/magic.clar#L587)
+[View in file](../contracts/magic.clar#L591)
 
 `(define-read-only (get-full-supplier ((id uint)) (response (tuple (controller principal) (escrow uint) (funds uint) (inbound-base-fee int) (inbound-fee (optional int)) (outbound-base-fee int) (outbound-fee (optional int)) (public-key (buff 33))) uint))`
 
@@ -1053,7 +1058,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-inbound-meta
 
-[View in file](../contracts/magic.clar#L598)
+[View in file](../contracts/magic.clar#L602)
 
 `(define-read-only (get-inbound-meta ((txid (buff 32))) (optional (tuple (csv uint) (output-index uint) (redeem-script (buff 148)) (sats uint) (sender-public-key (buff 33)))))`
 
@@ -1076,7 +1081,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-full-inbound
 
-[View in file](../contracts/magic.clar#L602)
+[View in file](../contracts/magic.clar#L606)
 
 `(define-read-only (get-full-inbound ((txid (buff 32))) (response (tuple (csv uint) (expiration uint) (hash (buff 32)) (output-index uint) (redeem-script (buff 148)) (sats uint) (sender-public-key (buff 33)) (supplier uint) (swapper principal) (xbtc uint)) uint))`
 
@@ -1105,7 +1110,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-user-inbound-volume
 
-[View in file](../contracts/magic.clar#L612)
+[View in file](../contracts/magic.clar#L616)
 
 `(define-read-only (get-user-inbound-volume ((user principal)) uint)`
 
@@ -1131,7 +1136,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-total-inbound-volume
 
-[View in file](../contracts/magic.clar#L619)
+[View in file](../contracts/magic.clar#L623)
 
 `(define-read-only (get-total-inbound-volume () uint)`
 
@@ -1146,7 +1151,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-user-outbound-volume
 
-[View in file](../contracts/magic.clar#L621)
+[View in file](../contracts/magic.clar#L625)
 
 `(define-read-only (get-user-outbound-volume ((user principal)) uint)`
 
@@ -1172,7 +1177,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-total-outbound-volume
 
-[View in file](../contracts/magic.clar#L628)
+[View in file](../contracts/magic.clar#L632)
 
 `(define-read-only (get-total-outbound-volume () uint)`
 
@@ -1187,7 +1192,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-user-total-volume
 
-[View in file](../contracts/magic.clar#L630)
+[View in file](../contracts/magic.clar#L634)
 
 `(define-read-only (get-user-total-volume ((user principal)) uint)`
 
@@ -1210,7 +1215,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### get-total-volume
 
-[View in file](../contracts/magic.clar#L634)
+[View in file](../contracts/magic.clar#L638)
 
 `(define-read-only (get-total-volume () uint)`
 
@@ -1227,7 +1232,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### transfer
 
-[View in file](../contracts/magic.clar#L640)
+[View in file](../contracts/magic.clar#L644)
 
 `(define-private (transfer ((amount uint) (sender principal) (recipient principal)) (response bool uint))`
 
@@ -1258,7 +1263,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 ### serialize-metadata
 
-[View in file](../contracts/magic.clar#L658)
+[View in file](../contracts/magic.clar#L662)
 
 `(define-read-only (serialize-metadata ((swapper principal) (base-fee int) (fee-rate int)) (buff 216))`
 
@@ -1293,7 +1298,7 @@ serialize the data.
 
 ### hash-metadata
 
-[View in file](../contracts/magic.clar#L671)
+[View in file](../contracts/magic.clar#L675)
 
 `(define-read-only (hash-metadata ((swapper principal) (base-fee int) (fee-rate int)) (buff 32))`
 
@@ -1320,7 +1325,7 @@ Generate a metadata hash, which is embedded in an inbound HTLC.
 
 ### get-swap-amount
 
-[View in file](../contracts/magic.clar#L686)
+[View in file](../contracts/magic.clar#L690)
 
 `(define-read-only (get-swap-amount ((amount uint) (fee-rate int) (base-fee int)) (response uint uint))`
 
@@ -1363,7 +1368,7 @@ amount after applying the fee rate
 
 ### get-amount-with-fee-rate
 
-[View in file](../contracts/magic.clar#L706)
+[View in file](../contracts/magic.clar#L710)
 
 `(define-read-only (get-amount-with-fee-rate ((amount uint) (fee-rate int)) int)`
 
@@ -1399,7 +1404,7 @@ a percentage of the original amount.
 
 ### update-user-inbound-volume
 
-[View in file](../contracts/magic.clar#L716)
+[View in file](../contracts/magic.clar#L720)
 
 `(define-private (update-user-inbound-volume ((user principal) (amount uint)) bool)`
 
@@ -1431,7 +1436,7 @@ a percentage of the original amount.
 
 ### update-user-outbound-volume
 
-[View in file](../contracts/magic.clar#L728)
+[View in file](../contracts/magic.clar#L732)
 
 `(define-private (update-user-outbound-volume ((user principal) (amount uint)) bool)`
 
@@ -1463,7 +1468,7 @@ a percentage of the original amount.
 
 ### validate-expiration
 
-[View in file](../contracts/magic.clar#L756)
+[View in file](../contracts/magic.clar#L760)
 
 `(define-read-only (validate-expiration ((expiration uint) (mined-height uint)) (response bool uint))`
 
@@ -1501,7 +1506,7 @@ There are two validations used here:
 
 ### validate-fee
 
-[View in file](../contracts/magic.clar#L773)
+[View in file](../contracts/magic.clar#L777)
 
 `(define-read-only (validate-fee ((fee-opt (optional int))) (response bool uint))`
 
@@ -1544,7 +1549,7 @@ is provided, it defaults to true without performing any validation.
 
 ### validate-outbound-revocable
 
-[View in file](../contracts/magic.clar#L802)
+[View in file](../contracts/magic.clar#L806)
 
 `(define-read-only (validate-outbound-revocable ((swap-id uint)) (response (tuple (created-at uint) (output (buff 128)) (sats uint) (supplier uint) (swapper principal) (xbtc uint)) uint))`
 
@@ -1578,7 +1583,7 @@ is provided, it defaults to true without performing any validation.
 
 ### generate-htlc-script
 
-[View in file](../contracts/magic.clar#L831)
+[View in file](../contracts/magic.clar#L835)
 
 `(define-read-only (generate-htlc-script ((sender (buff 33)) (recipient (buff 33)) (expiration (buff 4)) (hash (buff 32)) (metadata (buff 32))) (buff 148))`
 
@@ -1629,7 +1634,7 @@ certain conditions are met.
 
 ### generate-wsh-output
 
-[View in file](../contracts/magic.clar#L859)
+[View in file](../contracts/magic.clar#L863)
 
 `(define-read-only (generate-wsh-output ((script (buff 148))) (buff 34))`
 
@@ -1658,7 +1663,7 @@ a Pay-to-Witness-Script-Hash (P2WSH) output script.
 
 ### bytes-len
 
-[View in file](../contracts/magic.clar#L863)
+[View in file](../contracts/magic.clar#L867)
 
 `(define-read-only (bytes-len ((bytes (buff 4))) (buff 1))`
 
@@ -1681,7 +1686,7 @@ a Pay-to-Witness-Script-Hash (P2WSH) output script.
 
 ### read-varint
 
-[View in file](../contracts/magic.clar#L869)
+[View in file](../contracts/magic.clar#L873)
 
 `(define-read-only (read-varint ((num (buff 4))) (response uint uint))`
 
@@ -2231,7 +2236,7 @@ placeholder to mark inbound swap as revoked
 (define-constant ERR_READ_UINT (err u100))
 ```
 
-[View in file](../contracts/magic.clar#L867)
+[View in file](../contracts/magic.clar#L871)
 
 ### BUFF_TO_BYTE
 
@@ -2239,4 +2244,4 @@ placeholder to mark inbound swap as revoked
 (define-constant BUFF_TO_BYTE (list 0x00 0x01 0x02 0x03 0x04))
 ```
 
-[View in file](../contracts/magic.clar#L890)
+[View in file](../contracts/magic.clar#L894)

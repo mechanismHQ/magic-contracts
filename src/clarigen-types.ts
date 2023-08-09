@@ -3370,13 +3370,15 @@ export const contracts = {
           { name: 'xbtc', type: 'uint128' },
           { name: 'output', type: { buffer: { length: 128 } } },
           { name: 'supplier-id', type: 'uint128' },
+          { name: 'min-to-receive', type: 'uint128' },
         ],
         outputs: { type: { response: { ok: 'uint128', error: 'uint128' } } },
       } as TypedAbiFunction<
         [
           xbtc: TypedAbiArg<number | bigint, 'xbtc'>,
           output: TypedAbiArg<Uint8Array, 'output'>,
-          supplierId: TypedAbiArg<number | bigint, 'supplierId'>
+          supplierId: TypedAbiArg<number | bigint, 'supplierId'>,
+          minToReceive: TypedAbiArg<number | bigint, 'minToReceive'>
         ],
         Response<bigint, bigint>
       >,

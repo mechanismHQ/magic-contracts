@@ -58,6 +58,7 @@ describe("outbound swap tests", () => {
           xbtc: xbtcAmount,
           supplierId: 0n,
           output: swapperBtc.script,
+          minToReceive: sats,
         }),
         swapper
       );
@@ -155,6 +156,7 @@ describe("outbound swap tests", () => {
           xbtc: xbtcAmount,
           output: swapperBtc.script,
           supplierId: 0n,
+          minToReceive: sats,
         }),
         swapper
       );
@@ -233,5 +235,20 @@ describe("outbound swap tests", () => {
   it('next swap id is correct', () => {
     const nextId = chain.rov(magic.getNextOutboundId());
     expect(nextId).toEqual(2n);
+  });
+
+  it('initiate-outbound-swap fails if `min-to-receieve` is lower than sats amount', () => {
+    const xbtcAmount = 10000n;
+    const swapperBtc = btc.p2pkh(swapperKey);
+    const sats = getSwapAmount(xbtcAmount, feeOut, 100n);
+
+    const receipt = chain.txErr(magic.initiateOutboundSwap({
+      xbtc: xbtcAmount,
+      supplierId: 0n,
+      output: swapperBtc.script,
+      minToReceive: sats + 1n,
+    }), swapper);
+
+    expect(receipt.value).toEqual(magic.constants.ERR_INCONSISTENT_FEES.value);
   });
 });

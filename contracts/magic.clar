@@ -431,11 +431,14 @@
 ;; Swapper provides the amount of xBTC and their withdraw address.
 ;;
 ;; @returns the auto-generated swap-id of this swap
+;; 
+;; @throws ERR_INCONSISTENT_FEES if `min-to-receive` is less than the calculated
+;; amount of sats (in BTC) that the swapper will receive
 ;;
 ;; @param xbtc; amount of xBTC (sats) to swap
 ;; @param output; the output script for the swapper's BTC address
 ;; @param supplier-id; the supplier used for this swap
-(define-public (initiate-outbound-swap (xbtc uint) (output (buff 128)) (supplier-id uint))
+(define-public (initiate-outbound-swap (xbtc uint) (output (buff 128)) (supplier-id uint) (min-to-receive uint))
   (let
     (
       (supplier (unwrap! (map-get? supplier-by-id supplier-id) ERR_INVALID_SUPPLIER))
@@ -451,6 +454,7 @@
       })
       (swap-id (var-get next-outbound-id))
     )
+    (asserts! (>= sats min-to-receive) ERR_INCONSISTENT_FEES)
     ;; #[filter(xbtc)]
     (try! (transfer xbtc tx-sender (as-contract tx-sender)))
     (map-insert outbound-swaps swap-id swap)

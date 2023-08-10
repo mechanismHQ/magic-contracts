@@ -48,4 +48,4 @@ plan:
             parameters:
               - u1000000000
               - "'ST1H49Q7KM36Z82MHHWCQ92YANMGPPKSHEC0DW9RW"
-            cost: 1000000
+            cost: 100000

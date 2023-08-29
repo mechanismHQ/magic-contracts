@@ -8,14 +8,19 @@ scripts:
   integrate:
     cmd: 
       - mkdir -p tmp/devnet
+      - printf '\e]1;%s\a' 'DEVNET'
       - clarinet integrate -d
 
   electrum_server:
     # cmd: docker run -it -p 50001:50001 -e COIN="Bitcoin" -e NET="regtest" -e DAEMON_URL="http://devnet:devnet@host.docker.internal:18443" lukechilds/electrumx
-    cmd: pnpm electrum_server
+    cmd: 
+      - printf '\e]1;%s\a' 'ELECTRUM_SERVER'
+      - pnpm electrum_server
 
   electrum:
-    cmd: electrum --regtest
+    cmd: 
+      - printf '\e]1;%s\a' 'ELECTRUM_WALLET'
+      - electrum --regtest
 
   start:
     cmd: pnpm pm2 start ecosystem.config.cjs --only

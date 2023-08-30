@@ -64,66 +64,67 @@ plan:
         #     anchor-block-only: true
         #     clarity-version: 2
       epoch: "2.1"
-    - id: 3
-      transactions:
-        - contract-call:
-            anchor-block-only: false
-            contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
-            method: initialize
-            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 100000
-            parameters:
-              - '"xBTC"'
-              - '"xBTC"'
-              - u8
-              - "'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
-        - contract-call:
-            anchor-block-only: false
-            contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
-            method: add-principal-to-role
-            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 100000
-            parameters:
-              - u1
-              - "'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
-        - contract-call:
-            anchor-block-only: false
-            contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
-            method: set-token-uri
-            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 100000
-            parameters:
-              - 'u"https://wrapped.com/xbtc.json"'
-        - contract-call:
-            anchor-block-only: false
-            contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
-            method: mint-tokens
-            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            cost: 100000
-            parameters:
-              - u100000000000000
-              - "'ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5"
-        - contract-call:
-            anchor-block-only: false
-            contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
-            method: mint-tokens
-            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            parameters:
-              - u1000000000
-              - "'ST2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CFRK9AG"
-            cost: 1000000
-        - btc-transfer:
-            recipient: miwaGWCisZCHcWtakkB5SSCXebQsCzuBuv
-            expected-sender: mjSrB3wS4xab3kYqFktwBzfTdPg367ZJ2d
-            sats-amount: 500000000
-            sats-per-byte: 3
-        - btc-transfer:
-            recipient: mwhuW2yeKS32cjM9KfT6AHbE325woVQHgL
-            expected-sender: mjSrB3wS4xab3kYqFktwBzfTdPg367ZJ2d
-            sats-amount: 500000000
-            sats-per-byte: 3
-        - btc-transfer:
-            recipient: bcrt1qykgx8vxsuevr8cyev77vuumvasfh8p5q9ta0nv
-            expected-sender: mjSrB3wS4xab3kYqFktwBzfTdPg367ZJ2d
-            sats-amount: 500000000
-            sats-per-byte: 3
+    # - id: 2
+    #   epoch: "2.1"
+    #   transactions:
+        # - contract-call:
+        #     anchor-block-only: false
+        #     contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
+        #     method: initialize
+        #     expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+        #     cost: 100000
+        #     parameters:
+        #       - '"xBTC"'
+        #       - '"xBTC"'
+        #       - u8
+        #       - "'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
+        # - contract-call:
+        #     anchor-block-only: false
+        #     contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
+        #     method: add-principal-to-role
+        #     expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+        #     cost: 100000
+        #     parameters:
+        #       - u1
+        #       - "'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
+        # - contract-call:
+        #     anchor-block-only: false
+        #     contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
+        #     method: set-token-uri
+        #     expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+        #     cost: 100000
+        #     parameters:
+        #       - 'u"https://wrapped.com/xbtc.json"'
+        # - contract-call:
+        #     anchor-block-only: false
+        #     contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
+        #     method: mint-tokens
+        #     expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+        #     cost: 100000
+        #     parameters:
+        #       - u100000000000000
+        #       - "'ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5"
+        # - contract-call:
+        #     anchor-block-only: false
+        #     contract-id: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.Wrapped-Bitcoin
+        #     method: mint-tokens
+        #     expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+        #     parameters:
+        #       - u1000000000
+        #       - "'ST2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CFRK9AG"
+        #     cost: 1000000
+        # - btc-transfer:
+        #     recipient: miwaGWCisZCHcWtakkB5SSCXebQsCzuBuv
+        #     expected-sender: mjSrB3wS4xab3kYqFktwBzfTdPg367ZJ2d
+        #     sats-amount: 500000000
+        #     sats-per-byte: 3
+        # - btc-transfer:
+        #     recipient: mwhuW2yeKS32cjM9KfT6AHbE325woVQHgL
+        #     expected-sender: mjSrB3wS4xab3kYqFktwBzfTdPg367ZJ2d
+        #     sats-amount: 500000000
+        #     sats-per-byte: 3
+        # - btc-transfer:
+        #     recipient: bcrt1qykgx8vxsuevr8cyev77vuumvasfh8p5q9ta0nv
+        #     expected-sender: mjSrB3wS4xab3kYqFktwBzfTdPg367ZJ2d
+        #     sats-amount: 500000000
+        #     sats-per-byte: 3

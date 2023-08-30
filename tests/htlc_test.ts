@@ -25,6 +25,7 @@ import { randomBytes } from '../vendor/noble-hashes/utils.ts';
 import { deploy } from './helpers.ts';
 import { magic } from './clarigen.ts';
 import { isBytes } from '../vendor/micro-packed.ts';
+import { OP } from "../vendor/scure-btc-signer.ts";
 
 const fixture = {
   script:
@@ -79,7 +80,8 @@ describe('HTLC tests', () => {
   });
 
   it('sign htlc tx', () => {
-    const privKey = hex.decode('0101010101010101010101010101010101010101010101010101010101010101');
+    const privKey = secp256k1.utils.randomPrivateKey();
+    // const privKey = hex.decode('0101010101010101010101010101010101010101010101010101010101010101');
     const pub = secp256k1.getPublicKey(privKey, true);
     const preimage = randomBytes(20);
     const hash = sha256(preimage);
@@ -119,26 +121,29 @@ describe('HTLC tests', () => {
 
     const input = psbt.getInput(0)!;
     const partial = input.partialSig!;
-    const finalized = btc.Script.encode([
+    const finalParts = [
       partial[0][1],
-      'OP_0',
+      // for recovery:
+      // new Uint8Array([]),
+
       // for preimage:
-      // preimage,
-      // 'OP_1',
+      preimage,
       htlcScript,
-    ]);
+    ];
+    const finalized = btc.Script.encode(finalParts);
     const witness = btc.Script.decode(finalized).map(i => {
-      if (i === 0) return new Uint8Array();
+      if (i === 0) return new Uint8Array([]);
       if (i === 1) return new Uint8Array([1]);
       if (isBytes(i)) return i;
       // return btc.Script.encode([i]);
       throw new Error(`Wrong witness op=${i}`);
     });
-    input.finalScriptWitness = witness;
+    // input.finalScriptWitness = witness;
+    input.finalScriptWitness = finalParts;
     psbt.updateInput(0, input);
 
     // to validate signatures and finalScriptSig:
-    // const tx = psbt.extract();
+    const tx = psbt.extract();
     // console.log(`\n\n btcdeb --tx=${hex.encode(tx)} --txin=${inputTx.hex}`);
   });
 

@@ -4,5 +4,7 @@
   "initialVersions": {
     "magic-protocol": "2.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "dry-geese-raise"
+  ]
 }

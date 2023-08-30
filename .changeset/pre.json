@@ -1,0 +1,8 @@
+{
+  "mode": "exit",
+  "tag": "beta",
+  "initialVersions": {
+    "magic-protocol": "2.0.0-beta.4"
+  },
+  "changesets": []
+}

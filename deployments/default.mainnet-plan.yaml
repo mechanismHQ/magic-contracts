@@ -1,0 +1,25 @@
+---
+id: 0
+name: Mainnet deployment
+network: mainnet
+stacks-node: "https://stacks-node-api.mainnet.stacks.co"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoin.blockstack.com:8332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: clarity-bitcoin
+            expected-sender: SP35AH5CCEBS6618GHCQQH6ZBGH34N74PGGXFHBFT
+            cost: 500000
+            path: contracts/clarity-bitcoin.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: magic
+            expected-sender: SP35AH5CCEBS6618GHCQQH6ZBGH34N74PGGXFHBFT
+            cost: 500000
+            path: contracts/magic.clar
+            anchor-block-only: true
+            clarity-version: 2
+      epoch: "2.1"

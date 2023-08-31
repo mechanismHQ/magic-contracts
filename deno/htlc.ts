@@ -29,8 +29,10 @@ export function numberToLEBytes(num: bigint) {
 export const CSV_DELAY = 500n;
 export const CSV_DELAY_BUFF = btc.CompactSize.encode(CSV_DELAY);
 
-export function encodeExpiration(expiration?: bigint): Uint8Array {
-  return typeof expiration === 'undefined' ? CSV_DELAY_BUFF : btc.CompactSize.encode(expiration);
+export function encodeExpiration(expiration?: bigint): Uint8Array | number {
+  if (typeof expiration === 'undefined') return CSV_DELAY_BUFF;
+  if (expiration <= 252n) return Number(expiration);
+  return btc.CompactSize.encode(expiration);
 }
 
 export function encodeSwapperId(id: bigint): Uint8Array {

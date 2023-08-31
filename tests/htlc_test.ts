@@ -85,7 +85,8 @@ describe('HTLC tests', () => {
     const hash = sha256(preimage);
     const metadata = hex.decode('0000');
     const htlc = {
-      expiration: BigInt(fixture.expiration),
+      // expiration: BigInt(fixture.expiration),
+      expiration: 10n,
       hash: hash,
       metadata: sha256(metadata),
       recipientPublicKey: pub,
@@ -138,8 +139,8 @@ describe('HTLC tests', () => {
     psbt.updateInput(0, input);
 
     // to validate signatures and finalScriptSig:
-    // const tx = psbt.extract();
-    // console.log(`\n\n btcdeb --tx=${hex.encode(tx)} --txin=${inputTx.hex}`);
+    const tx = psbt.extract();
+    console.log(`\n\n btcdeb --tx=${hex.encode(tx)} --txin=${inputTx.hex}`);
   });
 
   it('generates a p2wsh output', () => {

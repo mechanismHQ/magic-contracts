@@ -5,6 +5,7 @@
     "magic-protocol": "2.0.0"
   },
   "changesets": [
-    "dry-geese-raise"
+    "dry-geese-raise",
+    "healthy-shirts-sit"
   ]
 }

@@ -1,5 +1,11 @@
 # magic-protocol
 
+## 2.1.0-alpha.1
+
+### Patch Changes
+
+- 5f5d69f: Fixes encoding of expirations for smaller sizes
+
 ## 2.1.0-alpha.0
 
 ### Minor Changes

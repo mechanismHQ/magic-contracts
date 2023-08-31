@@ -22,8 +22,10 @@ export interface HTLC {
   hash: Uint8Array;
 }
 
-export function encodeExpiration(expiration?: bigint): Uint8Array {
-  return typeof expiration === 'undefined' ? CSV_DELAY_BUFF : btc.CompactSize.encode(expiration);
+export function encodeExpiration(expiration?: bigint): Uint8Array | number {
+  if (typeof expiration === 'undefined') return CSV_DELAY_BUFF;
+  if (expiration <= 252n) return Number(expiration);
+  return btc.CompactSize.encode(expiration);
 }
 
 /**

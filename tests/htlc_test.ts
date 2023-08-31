@@ -16,6 +16,7 @@ import {
 import {
   createHtlcScript,
   createLegacyHtlcScript,
+  encodeExpiration,
   encodeSwapperId,
   generateHtlcTx,
   generateLegacyHtlcTx,
@@ -25,7 +26,7 @@ import { randomBytes } from '../vendor/noble-hashes/utils.ts';
 import { deploy } from './helpers.ts';
 import { magic } from './clarigen.ts';
 import { isBytes } from '../vendor/micro-packed.ts';
-import { OP } from "../vendor/scure-btc-signer.ts";
+import { OP, Script } from "../vendor/scure-btc-signer.ts";
 
 const fixture = {
   script:
@@ -79,6 +80,11 @@ describe('HTLC tests', () => {
     // console.log(tx.hex);
   });
 
+  it('testing compact size encodings', () => {
+    assertEquals(encodeExpiration(20n), 20);
+    assertEquals(bytesToHex(encodeExpiration(500n) as Uint8Array), 'fdf401');
+  });
+
   it('sign htlc tx', () => {
     const privKey = secp256k1.utils.randomPrivateKey();
     // const privKey = hex.decode('0101010101010101010101010101010101010101010101010101010101010101');
@@ -87,7 +93,8 @@ describe('HTLC tests', () => {
     const hash = sha256(preimage);
     const metadata = hex.decode('0000');
     const htlc = {
-      expiration: BigInt(fixture.expiration),
+      // expiration: BigInt(fixture.expiration),
+      expiration: 5n,
       hash: hash,
       metadata: sha256(metadata),
       recipientPublicKey: pub,
@@ -124,10 +131,10 @@ describe('HTLC tests', () => {
     const finalParts = [
       partial[0][1],
       // for recovery:
-      // new Uint8Array([]),
+      new Uint8Array([]),
 
       // for preimage:
-      preimage,
+      // preimage,
       htlcScript,
     ];
     const finalized = btc.Script.encode(finalParts);
@@ -144,7 +151,7 @@ describe('HTLC tests', () => {
 
     // to validate signatures and finalScriptSig:
     const tx = psbt.extract();
-    // console.log(`\n\n btcdeb --tx=${hex.encode(tx)} --txin=${inputTx.hex}`);
+    console.log(`\n\n btcdeb --tx=${hex.encode(tx)} --txin=${inputTx.hex}`);
   });
 
   it('generates a p2wsh output', () => {

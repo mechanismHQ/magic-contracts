@@ -12,6 +12,12 @@
 
 - 2b72a5b: Updates the HTLC script to be compatible with Segwit's minimalif logic
 
+## 2.0.1
+
+### Patch Changes
+
+- 813864c: Fixes encoding of expirations in bitcoin script for small numbers
+
 ## 2.0.0
 
 ### Patch Changes

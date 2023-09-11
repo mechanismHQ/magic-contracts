@@ -359,7 +359,7 @@ Update the public-key for a supplier
 
 [View in file](../contracts/magic.clar#L276)
 
-`(define-public (escrow-swap ((block (tuple (header (buff 80)) (height uint))) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof (tuple (hashes (list 20 (buff 32))) (tree-depth uint) (tx-index uint))) (output-index uint) (sender (buff 33)) (recipient (buff 33)) (expiration-buff (buff 4)) (hash (buff 32)) (swapper principal) (supplier-id uint) (max-base-fee int) (max-fee-rate int)) (response (tuple (csv uint) (output-index uint) (redeem-script (buff 148)) (sats uint) (sender-public-key (buff 33))) uint))`
+`(define-public (escrow-swap ((block (tuple (header (buff 80)) (height uint))) (prev-blocks (list 10 (buff 80))) (tx (buff 1024)) (proof (tuple (hashes (list 20 (buff 32))) (tree-depth uint) (tx-index uint))) (output-index uint) (sender (buff 33)) (recipient (buff 33)) (expiration-buff (buff 4)) (hash (buff 32)) (swapper principal) (supplier-id uint) (max-base-fee int) (max-fee-rate int)) (response (tuple (csv uint) (output-index uint) (redeem-script (buff 151)) (sats uint) (sender-public-key (buff 33))) uint))`
 
 Reserve the funds from a supplier's account after the Bitcoin transaction is
 sent during an inbound swap. The function validates the Bitcoin transaction by
@@ -1060,7 +1060,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 [View in file](../contracts/magic.clar#L602)
 
-`(define-read-only (get-inbound-meta ((txid (buff 32))) (optional (tuple (csv uint) (output-index uint) (redeem-script (buff 148)) (sats uint) (sender-public-key (buff 33)))))`
+`(define-read-only (get-inbound-meta ((txid (buff 32))) (optional (tuple (csv uint) (output-index uint) (redeem-script (buff 151)) (sats uint) (sender-public-key (buff 33)))))`
 
 <details>
   <summary>Source code:</summary>
@@ -1083,7 +1083,7 @@ finalizing, a swapper may call this function to receive the xBTC escrowed.
 
 [View in file](../contracts/magic.clar#L606)
 
-`(define-read-only (get-full-inbound ((txid (buff 32))) (response (tuple (csv uint) (expiration uint) (hash (buff 32)) (output-index uint) (redeem-script (buff 148)) (sats uint) (sender-public-key (buff 33)) (supplier uint) (swapper principal) (xbtc uint)) uint))`
+`(define-read-only (get-full-inbound ((txid (buff 32))) (response (tuple (csv uint) (expiration uint) (hash (buff 32)) (output-index uint) (redeem-script (buff 151)) (sats uint) (sender-public-key (buff 33)) (supplier uint) (swapper principal) (xbtc uint)) uint))`
 
 <details>
   <summary>Source code:</summary>
@@ -1585,7 +1585,7 @@ is provided, it defaults to true without performing any validation.
 
 [View in file](../contracts/magic.clar#L835)
 
-`(define-read-only (generate-htlc-script ((sender (buff 33)) (recipient (buff 33)) (expiration (buff 4)) (hash (buff 32)) (metadata (buff 32))) (buff 148))`
+`(define-read-only (generate-htlc-script ((sender (buff 33)) (recipient (buff 33)) (expiration (buff 4)) (hash (buff 32)) (metadata (buff 32))) (buff 151))`
 
 Generate a hashed timelock contract (HTLC) script. The function concatenates
 various components including sender, recipient, expiration, hash, and metadata
@@ -1607,14 +1607,14 @@ certain conditions are met.
   )
   (concat 0x20
   (concat metadata
-  (concat 0x7563a820 ;; DROP; IF; PUSH32
+  (concat 0x75829263a820 ;; DROP; SIZE; 0NOTEQUAL; IF; PUSH32
   (concat hash
   (concat 0x8821 ;; EQUALVERIFY; PUSH33
   (concat recipient
   (concat 0x67 ;; ELSE
   (concat (bytes-len expiration)
   (concat expiration
-  (concat 0xb27521 ;; CHECKSEQUENCEVERIFY; DROP; PUSH33
+  (concat 0xb2757521 ;; CHECKSEQUENCEVERIFY; DROP; DROP; PUSH33
   (concat sender 0x68ac) ;; ENDIF; CHECKSIG;
   ))))))))))
 )
@@ -1636,7 +1636,7 @@ certain conditions are met.
 
 [View in file](../contracts/magic.clar#L863)
 
-`(define-read-only (generate-wsh-output ((script (buff 148))) (buff 34))`
+`(define-read-only (generate-wsh-output ((script (buff 151))) (buff 34))`
 
 Generate a SegWit script hash (wsh) output. The function computes a SHA256 hash
 of the provided script and prepends it with `0x0020`. The output can be used as
@@ -1648,7 +1648,7 @@ a Pay-to-Witness-Script-Hash (P2WSH) output script.
   <summary>Source code:</summary>
 
 ```clarity
-(define-read-only (generate-wsh-output (script (buff 148)))
+(define-read-only (generate-wsh-output (script (buff 151)))
   (concat 0x0020 (sha256 script))
 )
 ```
@@ -1659,7 +1659,7 @@ a Pay-to-Witness-Script-Hash (P2WSH) output script.
 
 | Name   | Type       | Description                                                               |
 | ------ | ---------- | ------------------------------------------------------------------------- |
-| script | (buff 148) | a 148-byte buffer containing the script from which to generate the output |
+| script | (buff 151) | a 151-byte buffer containing the script from which to generate the output |
 
 ### bytes-len
 
@@ -1817,7 +1817,7 @@ extra info for inbound swaps - not needed for the `finalize` step
   output-index: uint,
   csv: uint,
   sats: uint,
-  redeem-script: (buff 148),
+  redeem-script: (buff 151),
 })
 ```
 

@@ -1,5 +1,15 @@
 # magic-protocol
 
+## 2.1.0
+
+### Minor Changes
+
+- 2b72a5b: Updates the HTLC script to be compatible with Segwit's minimalif logic
+
+### Patch Changes
+
+- 5f5d69f: Fixes encoding of expirations for smaller sizes
+
 ## 2.1.0-alpha.1
 
 ### Patch Changes

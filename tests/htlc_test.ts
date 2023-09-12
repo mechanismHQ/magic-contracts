@@ -151,7 +151,7 @@ describe('HTLC tests', () => {
 
     // to validate signatures and finalScriptSig:
     const tx = psbt.extract();
-    console.log(`\n\n btcdeb --tx=${hex.encode(tx)} --txin=${inputTx.hex}`);
+    // console.log(`\n\n btcdeb --tx=${hex.encode(tx)} --txin=${inputTx.hex}`);
   });
 
   it('generates a p2wsh output', () => {

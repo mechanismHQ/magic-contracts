@@ -1,5 +1,11 @@
 # magic-protocol
 
+## 2.2.0
+
+### Minor Changes
+
+- 93fe0f9: Fixes issue with verifying merkle proof due to mismatched length of `fold` list
+
 ## 2.1.0
 
 ### Minor Changes

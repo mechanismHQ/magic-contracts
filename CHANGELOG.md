@@ -1,5 +1,11 @@
 # magic-protocol
 
+## 2.3.0
+
+### Minor Changes
+
+- a66b55f: Fixes HTLC script helpers
+
 ## 2.2.0
 
 ### Minor Changes

@@ -85,8 +85,6 @@ export function createLegacyHtlcScript(htlc: LegacyHTLC) {
  * ```
  * ${metadata_hash}
  * OP_DROP
- * OP_SIZE
- * OP_0NOTEQUAL
  * OP_IF
  *   OP_SHA256 ${hash}
  *   OP_EQUALVERIFY
@@ -94,7 +92,6 @@ export function createLegacyHtlcScript(htlc: LegacyHTLC) {
  * OP_ELSE
  *   ${encodeExpiration(expiration).toString('hex')}
  *   OP_CHECKSEQUENCEVERIFY
- *   OP_DROP
  *   OP_DROP
  *   ${senderPublicKey}
  * OP_ENDIF
@@ -108,8 +105,6 @@ export function createHtlcScript(htlc: HTLC) {
   return btc.Script.encode([
     htlc.metadata,
     'DROP',
-    'SIZE',
-    '0NOTEQUAL',
     'IF',
     // 'DROP',
     'SHA256',
@@ -119,7 +114,6 @@ export function createHtlcScript(htlc: HTLC) {
     'ELSE',
     encodeExpiration(htlc.expiration),
     'CHECKSEQUENCEVERIFY',
-    'DROP',
     'DROP',
     htlc.senderPublicKey,
     'ENDIF',

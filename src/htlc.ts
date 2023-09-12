@@ -34,8 +34,6 @@ export function encodeExpiration(expiration?: bigint): Uint8Array | number {
  * ```
  * ${metadata_hash}
  * OP_DROP
- * OP_SIZE
- * OP_0NOTEQUAL
  * OP_IF
  *   OP_SHA256 ${hash}
  *   OP_EQUALVERIFY
@@ -43,7 +41,6 @@ export function encodeExpiration(expiration?: bigint): Uint8Array | number {
  * OP_ELSE
  *   ${encodeExpiration(expiration).toString('hex')}
  *   OP_CHECKSEQUENCEVERIFY
- *   OP_DROP
  *   OP_DROP
  *   ${senderPublicKey}
  * OP_ENDIF
@@ -57,8 +54,6 @@ export function createHtlcScript(htlc: HTLC) {
   return btc.Script.encode([
     htlc.metadata,
     'DROP',
-    'SIZE',
-    '0NOTEQUAL',
     'IF',
     'SHA256',
     htlc.hash,
@@ -67,7 +62,6 @@ export function createHtlcScript(htlc: HTLC) {
     'ELSE',
     encodeExpiration(htlc.expiration),
     'CHECKSEQUENCEVERIFY',
-    'DROP',
     'DROP',
     htlc.senderPublicKey,
     'ENDIF',

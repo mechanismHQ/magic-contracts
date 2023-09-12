@@ -3105,7 +3105,7 @@ export const contracts = {
                   { "name": "output-index", "type": "uint128" },
                   {
                     "name": "redeem-script",
-                    "type": { "buffer": { "length": 151 } },
+                    "type": { "buffer": { "length": 148 } },
                   },
                   { "name": "sats", "type": "uint128" },
                   {
@@ -3465,7 +3465,7 @@ export const contracts = {
           { "name": "hash", "type": { "buffer": { "length": 32 } } },
           { "name": "metadata", "type": { "buffer": { "length": 32 } } },
         ],
-        "outputs": { "type": { "buffer": { "length": 151 } } },
+        "outputs": { "type": { "buffer": { "length": 148 } } },
       } as TypedAbiFunction<
         [
           sender: TypedAbiArg<Uint8Array, "sender">,
@@ -3479,7 +3479,7 @@ export const contracts = {
       generateWshOutput: {
         "name": "generate-wsh-output",
         "access": "read_only",
-        "args": [{ "name": "script", "type": { "buffer": { "length": 151 } } }],
+        "args": [{ "name": "script", "type": { "buffer": { "length": 148 } } }],
         "outputs": { "type": { "buffer": { "length": 34 } } },
       } as TypedAbiFunction<
         [script: TypedAbiArg<Uint8Array, "script">],
@@ -3542,7 +3542,7 @@ export const contracts = {
                   { "name": "output-index", "type": "uint128" },
                   {
                     "name": "redeem-script",
-                    "type": { "buffer": { "length": 151 } },
+                    "type": { "buffer": { "length": 148 } },
                   },
                   { "name": "sats", "type": "uint128" },
                   {
@@ -3630,7 +3630,7 @@ export const contracts = {
                 { "name": "output-index", "type": "uint128" },
                 {
                   "name": "redeem-script",
-                  "type": { "buffer": { "length": 151 } },
+                  "type": { "buffer": { "length": 148 } },
                 },
                 { "name": "sats", "type": "uint128" },
                 {
@@ -3959,7 +3959,7 @@ export const contracts = {
             { "name": "output-index", "type": "uint128" },
             {
               "name": "redeem-script",
-              "type": { "buffer": { "length": 151 } },
+              "type": { "buffer": { "length": 148 } },
             },
             { "name": "sats", "type": "uint128" },
             {

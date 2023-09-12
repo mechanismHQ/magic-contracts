@@ -33,7 +33,7 @@
   output-index: uint,
   csv: uint,
   sats: uint,
-  redeem-script: (buff 151),
+  redeem-script: (buff 148),
 })
 ;; mapping of txid -> preimage
 (define-map inbound-preimages (buff 32) (buff 128))
@@ -841,14 +841,14 @@
   )
   (concat 0x20
   (concat metadata
-  (concat 0x75829263a820 ;; DROP; SIZE; 0NOTEQUAL; IF; PUSH32
+  (concat 0x7563a820 ;; DROP; IF; PUSH32
   (concat hash
   (concat 0x8821 ;; EQUALVERIFY; PUSH33
   (concat recipient
   (concat 0x67 ;; ELSE
   (concat (bytes-len expiration)
   (concat expiration
-  (concat 0xb2757521 ;; CHECKSEQUENCEVERIFY; DROP; DROP; PUSH33
+  (concat 0xb27521 ;; CHECKSEQUENCEVERIFY; DROP; PUSH33
   (concat sender 0x68ac) ;; ENDIF; CHECKSIG;
   ))))))))))
 )
@@ -859,8 +859,8 @@
 ;;
 ;; @returns a P2WSH output script
 ;;
-;; @param script; a 151-byte buffer containing the script from which to generate the output
-(define-read-only (generate-wsh-output (script (buff 151)))
+;; @param script; a 148-byte buffer containing the script from which to generate the output
+(define-read-only (generate-wsh-output (script (buff 148)))
   (concat 0x0020 (sha256 script))
 )
 

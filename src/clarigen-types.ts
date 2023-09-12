@@ -3222,7 +3222,7 @@ export const contracts = {
                 tuple: [
                   { name: 'csv', type: 'uint128' },
                   { name: 'output-index', type: 'uint128' },
-                  { name: 'redeem-script', type: { buffer: { length: 151 } } },
+                  { name: 'redeem-script', type: { buffer: { length: 148 } } },
                   { name: 'sats', type: 'uint128' },
                   { name: 'sender-public-key', type: { buffer: { length: 33 } } },
                 ],
@@ -3578,7 +3578,7 @@ export const contracts = {
           { name: 'hash', type: { buffer: { length: 32 } } },
           { name: 'metadata', type: { buffer: { length: 32 } } },
         ],
-        outputs: { type: { buffer: { length: 151 } } },
+        outputs: { type: { buffer: { length: 148 } } },
       } as TypedAbiFunction<
         [
           sender: TypedAbiArg<Uint8Array, 'sender'>,
@@ -3592,7 +3592,7 @@ export const contracts = {
       generateWshOutput: {
         name: 'generate-wsh-output',
         access: 'read_only',
-        args: [{ name: 'script', type: { buffer: { length: 151 } } }],
+        args: [{ name: 'script', type: { buffer: { length: 148 } } }],
         outputs: { type: { buffer: { length: 34 } } },
       } as TypedAbiFunction<[script: TypedAbiArg<Uint8Array, 'script'>], Uint8Array>,
       getAmountWithFeeRate: {
@@ -3641,7 +3641,7 @@ export const contracts = {
                   { name: 'expiration', type: 'uint128' },
                   { name: 'hash', type: { buffer: { length: 32 } } },
                   { name: 'output-index', type: 'uint128' },
-                  { name: 'redeem-script', type: { buffer: { length: 151 } } },
+                  { name: 'redeem-script', type: { buffer: { length: 148 } } },
                   { name: 'sats', type: 'uint128' },
                   { name: 'sender-public-key', type: { buffer: { length: 33 } } },
                   { name: 'supplier', type: 'uint128' },
@@ -3726,7 +3726,7 @@ export const contracts = {
               tuple: [
                 { name: 'csv', type: 'uint128' },
                 { name: 'output-index', type: 'uint128' },
-                { name: 'redeem-script', type: { buffer: { length: 151 } } },
+                { name: 'redeem-script', type: { buffer: { length: 148 } } },
                 { name: 'sats', type: 'uint128' },
                 { name: 'sender-public-key', type: { buffer: { length: 33 } } },
               ],
@@ -4029,7 +4029,7 @@ export const contracts = {
           tuple: [
             { name: 'csv', type: 'uint128' },
             { name: 'output-index', type: 'uint128' },
-            { name: 'redeem-script', type: { buffer: { length: 151 } } },
+            { name: 'redeem-script', type: { buffer: { length: 148 } } },
             { name: 'sats', type: 'uint128' },
             { name: 'sender-public-key', type: { buffer: { length: 33 } } },
           ],
@@ -5132,7 +5132,7 @@ export const deployments = {
     devnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.clarity-bitcoin',
     simnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.clarity-bitcoin',
     testnet: 'STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX.clarity-bitcoin',
-    mainnet: 'SP336JEZ2FC4BRG6GV3QPB0ZCPWRV9WSSWH7JFD7K.clarity-bitcoin',
+    mainnet: 'SP3KWJBR2H1XSQMCZVS7KCEDXCEHYQZ4M68Q74VTP.clarity-bitcoin',
   },
   ftTrait: {
     devnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.ft-trait',
@@ -5144,7 +5144,7 @@ export const deployments = {
     devnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.magic',
     simnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.magic',
     testnet: 'STJZ08DQQNGAQ4PWTTNZTD0HDHBWE3J32GMB3HJX.magic',
-    mainnet: 'SP336JEZ2FC4BRG6GV3QPB0ZCPWRV9WSSWH7JFD7K.magic',
+    mainnet: 'SP3KWJBR2H1XSQMCZVS7KCEDXCEHYQZ4M68Q74VTP.magic',
   },
   restrictedTokenTrait: {
     devnet: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.restricted-token-trait',

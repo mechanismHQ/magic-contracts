@@ -10,14 +10,14 @@ plan:
       transactions:
         - contract-publish:
             contract-name: clarity-bitcoin
-            expected-sender: SP336JEZ2FC4BRG6GV3QPB0ZCPWRV9WSSWH7JFD7K
+            expected-sender: SP3KWJBR2H1XSQMCZVS7KCEDXCEHYQZ4M68Q74VTP
             cost: 500000
             path: contracts/clarity-bitcoin.clar
             anchor-block-only: true
             clarity-version: 2
         - contract-publish:
             contract-name: magic
-            expected-sender: SP336JEZ2FC4BRG6GV3QPB0ZCPWRV9WSSWH7JFD7K
+            expected-sender: SP3KWJBR2H1XSQMCZVS7KCEDXCEHYQZ4M68Q74VTP
             cost: 500000
             path: contracts/magic.clar
             anchor-block-only: true

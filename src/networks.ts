@@ -1,5 +1,7 @@
 // export { NETWORK, TEST_NETWORK } from '@scure/btc-signer';
 
+export type Network = 'mainnet' | 'testnet' | 'devnet';
+
 export const BtcMainnet = {
   bech32: 'bc',
   pubKeyHash: 0x00,
@@ -28,3 +30,14 @@ export const BitcoinNetwork = {
   Testnet: BtcTestnet,
   Regtest: BtcRegtest,
 } as const;
+
+export function getBtcNetwork(network: Network) {
+  switch (network) {
+    case 'mainnet':
+      return BtcMainnet;
+    case 'testnet':
+      return BtcTestnet;
+    case 'devnet':
+      return BtcRegtest;
+  }
+}

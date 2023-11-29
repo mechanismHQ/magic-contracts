@@ -128,6 +128,7 @@ describe('HTLC tests', () => {
 
     const input = psbt.getInput(0)!;
     const partial = input.partialSig!;
+    console.log(partial[0][1].length);
     const finalParts = [
       partial[0][1],
       // for recovery:
